@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 
 // Sound Synthesizer using Web Audio API (no external sound files required)
 const playFx = (type: string, isMuted: boolean) => {
