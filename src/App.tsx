@@ -1,78 +1,97 @@
 import React, { useState, useRef } from 'react';
 
-// Sound Synthesizer using Web Audio API (no external sound files required)
-const playFx = (type: string, isMuted: boolean) => {
+// Precision Audio Engine: Rich mechanical acoustics via Web Audio API
+const playAcousticFx = (type: string, isMuted: boolean) => {
   if (isMuted) return;
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new AudioContextClass();
     const now = ctx.currentTime;
 
-    if (type === 'pop') {
+    if (type === 'bubble-pop') {
+      // Natural plastic bubble rupture: pop transient + hollow resonant cavity
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const randomPitch = 520 + Math.random() * 180;
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(450, now);
-      osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
-      gain.gain.setValueAtTime(0.5, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-      osc.start(now);
-      osc.stop(now + 0.08);
-    } else if (type === 'pen-down') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(1200, now);
-      osc.frequency.exponentialRampToValueAtTime(400, now + 0.04);
+      osc.frequency.setValueAtTime(randomPitch, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.05);
+
       gain.gain.setValueAtTime(0.4, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
-      osc.start(now);
-      osc.stop(now + 0.04);
-    } else if (type === 'pen-up') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(600, now);
-      osc.frequency.exponentialRampToValueAtTime(900, now + 0.03);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
-      osc.start(now);
-      osc.stop(now + 0.03);
-    } else if (type === 'switch') {
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(220, now);
-      osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.05);
-    } else if (type === 'coin') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(987.77, now);
-      gain.gain.setValueAtTime(0.35, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-      osc.start(now);
-      osc.stop(now + 0.45);
-    } else if (type === 'vote') {
+    } else if (type === 'pen-click') {
+      // Dual-stage metallic latch click
+      const bufferSize = ctx.sampleRate * 0.03;
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+
+      const whiteNoise = ctx.createBufferSource();
+      whiteNoise.buffer = noiseBuffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 3200;
+      filter.Q.value = 4;
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.6, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
+
+      whiteNoise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      whiteNoise.start(now);
+    } else if (type === 'heavy-switch') {
+      // Heavy mechanical wall switch thump
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(523.25, now);
-      osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.15);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.04);
+
+      gain.gain.setValueAtTime(0.7, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
       osc.start(now);
-      osc.stop(now + 0.15);
+      osc.stop(now + 0.04);
+    } else if (type === 'coin-clink') {
+      // Pure nickel/brass coin ring
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1980, now);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.6);
     }
-  } catch (e) {
-    // AudioContext blocked before user interaction
+  } catch {
+    // Audio context was blocked or not allowed yet
   }
 };
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'bubble' | 'pen' | 'switch' | 'coin' | 'mood' | 'scroll'>('bubble');
   const [isMuted, setIsMuted] = useState<boolean>(() => localStorage.getItem('bh_muted') === 'true');
-  const [totalActions, setTotalActions] = useState<number>(() => {
+  const [actions, setActions] = useState<number>(() => {
     return parseInt(localStorage.getItem('bh_actions') || '0', 10);
   });
 
   const recordAction = () => {
-    setTotalActions((prev) => {
+    setActions((prev) => {
       const next = prev + 1;
       localStorage.setItem('bh_actions', next.toString());
       return next;
@@ -86,81 +105,74 @@ export default function App() {
     });
   };
 
-  // 1. Bubble Wrap State
-  const [bubbles, setBubbles] = useState<boolean[]>(() => Array(48).fill(false));
-  const popBubble = (index: number) => {
-    if (bubbles[index]) return;
-    playFx('pop', isMuted);
+  // 1. Bubble Wrap
+  const [bubbles, setBubbles] = useState<boolean[]>(() => Array(40).fill(false));
+  const popBubble = (idx: number) => {
+    if (bubbles[idx]) return;
+    playAcousticFx('bubble-pop', isMuted);
     recordAction();
     const updated = [...bubbles];
-    updated[index] = true;
+    updated[idx] = true;
     setBubbles(updated);
   };
   const resetBubbles = () => {
-    setBubbles(Array(48).fill(false));
+    setBubbles(Array(40).fill(false));
   };
 
-  // 2. Light Switch State
-  const [lightsOn, setLightsOn] = useState<boolean>(false);
-  const toggleLight = () => {
-    playFx('switch', isMuted);
+  // 2. Heavy Switch
+  const [powerOn, setPowerOn] = useState<boolean>(false);
+  const toggleSwitch = () => {
+    playAcousticFx('heavy-switch', isMuted);
     recordAction();
-    setLightsOn((prev) => !prev);
+    setPowerOn((prev) => !prev);
   };
 
-  // 3. Pen Clicker State
-  const [penPressed, setPenPressed] = useState<boolean>(false);
-  const [penClicks, setPenClicks] = useState<number>(0);
-  const clickPenDown = () => {
-    setPenPressed(true);
-    playFx('pen-down', isMuted);
-    setPenClicks((prev) => prev + 1);
+  // 3. Tactile Pen
+  const [penDepressed, setPenDepressed] = useState<boolean>(false);
+  const [penCount, setPenCount] = useState<number>(0);
+  const clickPen = () => {
+    playAcousticFx('pen-click', isMuted);
     recordAction();
-  };
-  const clickPenUp = () => {
-    if (penPressed) {
-      playFx('pen-up', isMuted);
-      setPenPressed(false);
-    }
+    setPenDepressed(true);
+    setPenCount((prev) => prev + 1);
+    setTimeout(() => setPenDepressed(false), 90);
   };
 
-  // 4. Coin Toss State
-  const [flipping, setFlipping] = useState<boolean>(false);
-  const [coinSide, setCoinSide] = useState<'heads' | 'tails'>('heads');
-  const [coinStats, setCoinStats] = useState({ heads: 14, tails: 11 });
-  const flipCoin = () => {
-    if (flipping) return;
-    setFlipping(true);
-    playFx('coin', isMuted);
+  // 4. Coin Toss
+  const [isFlipping, setIsFlipping] = useState<boolean>(false);
+  const [coinSide, setCoinSide] = useState<'HEADS' | 'TAILS'>('HEADS');
+  const [coinStats, setCoinStats] = useState({ heads: 24, tails: 19 });
+  const triggerFlip = () => {
+    if (isFlipping) return;
+    setIsFlipping(true);
+    playAcousticFx('coin-clink', isMuted);
     recordAction();
     setTimeout(() => {
-      const result = Math.random() > 0.5 ? 'heads' : 'tails';
-      setCoinSide(result);
-      setCoinStats((prev) => ({ ...prev, [result]: prev[result] + 1 }));
-      setFlipping(false);
-    }, 700);
+      const outcome = Math.random() > 0.5 ? 'HEADS' : 'TAILS';
+      setCoinSide(outcome);
+      setCoinStats((prev) => ({ ...prev, [outcome.toLowerCase()]: prev[outcome.toLowerCase() as 'heads' | 'tails'] + 1 }));
+      setIsFlipping(false);
+    }, 600);
   };
 
-  // 5. Daily Mood Meter State
-  const [userVote, setUserVote] = useState<string | null>(() => localStorage.getItem('bh_mood_vote'));
-  const [moodVotes, setMoodVotes] = useState({ great: 312, meh: 540, tired: 421 });
-  const voteMood = (type: 'great' | 'meh' | 'tired') => {
-    if (userVote) return;
-    playFx('vote', isMuted);
+  // 5. Minimalist Mood Meter
+  const [selectedMood, setSelectedMood] = useState<string | null>(() => localStorage.getItem('bh_mood_vote'));
+  const [votes, setVotes] = useState({ serene: 412, neutral: 689, drained: 531 });
+  const castVote = (type: 'serene' | 'neutral' | 'drained') => {
+    if (selectedMood) return;
+    playAcousticFx('heavy-switch', isMuted);
     recordAction();
-    setUserVote(type);
+    setSelectedMood(type);
     localStorage.setItem('bh_mood_vote', type);
-    setMoodVotes((prev) => ({ ...prev, [type]: prev[type] + 1 }));
+    setVotes((prev) => ({ ...prev, [type]: prev[type] + 1 }));
   };
-  const totalMoodVotes = moodVotes.great + moodVotes.meh + moodVotes.tired;
+  const totalVotes = votes.serene + votes.neutral + votes.drained;
 
-  // 6. Longest Scroll State
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [metersScrolled, setMetersScrolled] = useState<number>(0);
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const top = e.currentTarget.scrollTop;
-    const meters = Math.floor(top / 40);
-    setMetersScrolled(meters);
+  // 6. Monolith Scroll Depth
+  const [meters, setMeters] = useState<number>(0);
+  const onScrollContainer = (e: React.UIEvent<HTMLDivElement>) => {
+    const depth = Math.floor(e.currentTarget.scrollTop / 32);
+    setMeters(depth);
   };
 
   return (
@@ -168,410 +180,448 @@ export default function App() {
       style={{
         minHeight: '100vh',
         width: '100%',
-        backgroundColor: lightsOn ? '#f4f4f5' : '#09090b',
-        color: lightsOn ? '#18181b' : '#fafafa',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        backgroundColor: powerOn ? '#fafafa' : '#090a0f',
+        color: powerOn ? '#090a0f' : '#ededed',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
         justifyContent: 'space-between',
-        transition: 'background-color 0.25s, color 0.25s',
-        overflow: 'hidden',
+        transition: 'background-color 0.2s ease, color 0.2s ease',
         userSelect: 'none',
       }}
     >
-      {/* Top Header */}
+      {/* Precision Top Bar */}
       <header
         style={{
           width: '100%',
-          maxWidth: '850px',
+          maxWidth: '960px',
+          margin: '0 auto',
+          padding: '24px 24px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '24px 20px',
           boxSizing: 'border-box',
+          borderBottom: `1px solid ${powerOn ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.07)'}`,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              width: '10px',
-              height: '10px',
-              borderRadius: '50%',
-              backgroundColor: '#10b981',
-              boxShadow: '0 0 10px #10b981',
-            }}
-          />
-          <span style={{ fontWeight: 800, letterSpacing: '-0.5px', fontSize: '18px' }}>
-            boredhuman.in
-          </span>
-        </div>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div
             style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: powerOn ? '#090a0f' : '#22c55e',
+            }}
+          />
+          <span style={{ fontSize: '14px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            boredhuman
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div
+            style={{
+              fontVariantNumeric: 'tabular-nums',
               fontSize: '13px',
-              padding: '6px 14px',
-              borderRadius: '999px',
-              background: lightsOn ? '#e4e4e7' : '#18181b',
-              border: `1px solid ${lightsOn ? '#d4d4d8' : '#27272a'}`,
-              fontWeight: 600,
+              letterSpacing: '0.02em',
+              color: powerOn ? '#52525b' : '#a1a1aa',
             }}
           >
-            {totalActions} clicks today
+            {actions.toLocaleString()} INTERACTIONS
           </div>
-
           <button
             onClick={toggleMute}
-            aria-label="Toggle Sound"
             style={{
-              background: lightsOn ? '#e4e4e7' : '#18181b',
-              border: `1px solid ${lightsOn ? '#d4d4d8' : '#27272a'}`,
+              background: 'transparent',
+              border: `1px solid ${powerOn ? '#e4e4e7' : '#27272a'}`,
               color: 'inherit',
-              borderRadius: '999px',
               padding: '6px 12px',
-              cursor: 'pointer',
-              fontSize: '13px',
+              borderRadius: '6px',
+              fontSize: '11px',
               fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
             }}
           >
-            {isMuted ? '🔇 Off' : '🔊 On'}
+            {isMuted ? 'Muted' : 'Audio On'}
           </button>
         </div>
       </header>
 
-      {/* Main Interactive Stage */}
+      {/* Interactive Clean Viewport */}
       <main
         style={{
           flex: 1,
-          width: '100%',
-          maxWidth: '750px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '16px',
+          padding: '32px 16px',
           boxSizing: 'border-box',
         }}
       >
-        {/* Tool 1: Bubble Wrap */}
+        {/* Tool 1: Tactile Bubble Membrane */}
         {activeTab === 'bubble' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '18px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px' }}>
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(8, 1fr)',
-                gap: '10px',
+                gridTemplateColumns: 'repeat(8, 44px)',
+                gridGap: '12px',
                 padding: '24px',
-                borderRadius: '24px',
-                background: lightsOn ? '#ffffff' : '#121215',
-                border: `1px solid ${lightsOn ? '#e4e4e7' : '#27272a'}`,
-                boxShadow: lightsOn ? '0 10px 25px rgba(0,0,0,0.05)' : '0 10px 30px rgba(0,0,0,0.5)',
+                borderRadius: '16px',
+                background: powerOn ? '#ffffff' : '#111217',
+                border: `1px solid ${powerOn ? '#e5e7eb' : '#1f2027'}`,
+                boxShadow: powerOn
+                  ? '0 20px 40px -15px rgba(0,0,0,0.06)'
+                  : '0 30px 60px -20px rgba(0,0,0,0.8)',
               }}
             >
-              {bubbles.map((isPopped, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => popBubble(idx)}
+              {bubbles.map((popped, i) => (
+                <div
+                  key={i}
+                  onClick={() => popBubble(i)}
                   style={{
-                    width: '38px',
-                    height: '38px',
+                    width: '44px',
+                    height: '44px',
                     borderRadius: '50%',
-                    border: 'none',
-                    cursor: isPopped ? 'default' : 'pointer',
-                    background: isPopped
-                      ? (lightsOn ? '#e4e4e7' : '#27272a')
-                      : 'linear-gradient(135deg, #38bdf8, #2563eb)',
-                    opacity: isPopped ? 0.35 : 1,
-                    transform: isPopped ? 'scale(0.88)' : 'scale(1)',
-                    transition: 'all 0.12s ease',
-                    boxShadow: isPopped ? 'none' : '0 4px 10px rgba(37,99,235,0.4)',
+                    cursor: popped ? 'default' : 'pointer',
+                    background: popped
+                      ? (powerOn ? '#f4f4f5' : '#181920')
+                      : (powerOn
+                          ? 'radial-gradient(circle at 35% 35%, #ffffff, #d4d4d8)'
+                          : 'radial-gradient(circle at 35% 35%, #2a2d39, #13141a)'),
+                    border: popped
+                      ? `1px solid ${powerOn ? '#e4e4e7' : '#1f212a'}`
+                      : `1px solid ${powerOn ? '#cbd5e1' : '#333745'}`,
+                    boxShadow: popped
+                      ? 'inset 0 2px 4px rgba(0,0,0,0.2)'
+                      : (powerOn
+                          ? '0 4px 10px rgba(0,0,0,0.08), inset 0 -2px 4px rgba(0,0,0,0.1)'
+                          : '0 4px 12px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.1)'),
+                    transform: popped ? 'scale(0.92)' : 'scale(1)',
+                    transition: 'transform 0.08s ease, background 0.15s ease',
                   }}
                 />
               ))}
             </div>
+
             <button
               onClick={resetBubbles}
               style={{
                 background: 'transparent',
-                border: `1px solid ${lightsOn ? '#d4d4d8' : '#3f3f46'}`,
-                color: 'inherit',
-                borderRadius: '8px',
-                padding: '8px 18px',
-                fontSize: '13px',
+                border: 'none',
+                color: powerOn ? '#71717a' : '#71717a',
+                fontSize: '12px',
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
                 cursor: 'pointer',
               }}
             >
-              Fresh Sheet
+              Regenerate Sheet
             </button>
           </div>
         )}
 
-        {/* Tool 2: Light Switch */}
+        {/* Tool 2: Industrial Rocker Switch */}
         {activeTab === 'switch' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
             <div
-              onClick={toggleLight}
+              onClick={toggleSwitch}
               style={{
-                width: '100px',
-                height: '170px',
-                background: lightsOn ? '#ffffff' : '#18181b',
-                border: `3px solid ${lightsOn ? '#d4d4d8' : '#27272a'}`,
-                borderRadius: '16px',
-                cursor: 'pointer',
+                width: '120px',
+                height: '210px',
+                background: powerOn ? '#ffffff' : '#14151b',
+                borderRadius: '12px',
+                border: `1px solid ${powerOn ? '#e2e8f0' : '#232530'}`,
+                boxShadow: powerOn
+                  ? '0 25px 50px -12px rgba(0,0,0,0.08)'
+                  : '0 30px 60px -15px rgba(0,0,0,0.9)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: lightsOn ? '0 15px 35px rgba(0,0,0,0.08)' : '0 20px 40px rgba(0,0,0,0.7)',
+                cursor: 'pointer',
               }}
             >
               <div
                 style={{
-                  width: '44px',
-                  height: '80px',
-                  background: lightsOn ? '#f4f4f5' : '#27272a',
-                  borderRadius: '8px',
-                  border: `2px solid ${lightsOn ? '#d4d4d8' : '#3f3f46'}`,
+                  width: '64px',
+                  height: '130px',
+                  background: powerOn ? '#f1f5f9' : '#0b0c10',
+                  borderRadius: '6px',
+                  border: `1px solid ${powerOn ? '#cbd5e1' : '#272935'}`,
+                  position: 'relative',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: lightsOn ? 'flex-start' : 'flex-end',
-                  padding: '4px',
+                  justifyContent: powerOn ? 'flex-start' : 'flex-end',
+                  padding: '5px',
                   boxSizing: 'border-box',
-                  transition: 'all 0.15s ease',
                 }}
               >
                 <div
                   style={{
+                    height: '58px',
                     width: '100%',
-                    height: '34px',
-                    borderRadius: '5px',
-                    background: lightsOn ? '#3b82f6' : '#71717a',
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+                    background: powerOn
+                      ? 'linear-gradient(180deg, #ffffff, #e2e8f0)'
+                      : 'linear-gradient(180deg, #262833, #181920)',
+                    borderRadius: '4px',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+                    border: `1px solid ${powerOn ? '#cbd5e1' : '#323645'}`,
                   }}
                 />
               </div>
             </div>
-            <span style={{ fontSize: '14px', opacity: 0.7 }}>
-              The switch is currently {lightsOn ? 'ON' : 'OFF'}
-            </span>
+            <div style={{ fontSize: '11px', letterSpacing: '0.1em', opacity: 0.5, textTransform: 'uppercase' }}>
+              STATE: {powerOn ? 'LIGHT' : 'DARK'}
+            </div>
           </div>
         )}
 
-        {/* Tool 3: Pen Clicker */}
+        {/* Tool 3: Tactile Aluminum Pen Plunger */}
         {activeTab === 'pen' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '36px' }}>
             <div
-              onMouseDown={clickPenDown}
-              onMouseUp={clickPenUp}
-              onTouchStart={clickPenDown}
-              onTouchEnd={clickPenUp}
+              onClick={clickPen}
               style={{
-                width: '70px',
-                height: '240px',
-                cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
+                cursor: 'pointer',
               }}
             >
-              {/* Clickable Plunger */}
+              {/* Plunger Actuator */}
               <div
                 style={{
-                  width: '18px',
-                  height: penPressed ? '10px' : '26px',
-                  background: '#a1a1aa',
-                  borderTopLeftRadius: '4px',
-                  borderTopRightRadius: '4px',
-                  transition: 'height 0.05s linear',
+                  width: '28px',
+                  height: penDepressed ? '14px' : '38px',
+                  background: 'linear-gradient(90deg, #94a3b8, #cbd5e1, #64748b)',
+                  borderRadius: '4px 4px 0 0',
+                  transition: 'height 0.06s cubic-bezier(0.1, 0.9, 0.2, 1)',
+                  boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.4)',
                 }}
               />
-              {/* Pen Body */}
+              {/* Barrel */}
               <div
                 style={{
-                  width: '40px',
-                  height: '170px',
-                  background: 'linear-gradient(180deg, #1e293b, #0f172a)',
-                  borderRadius: '10px 10px 6px 6px',
-                  border: '2px solid #334155',
+                  width: '48px',
+                  height: '240px',
+                  background: powerOn
+                    ? 'linear-gradient(90deg, #334155, #1e293b, #0f172a)'
+                    : 'linear-gradient(90deg, #1e2029, #282b37, #13141a)',
+                  borderRadius: '4px 4px 2px 2px',
+                  border: `1px solid ${powerOn ? '#475569' : '#333746'}`,
                   display: 'flex',
                   justifyContent: 'center',
                   paddingTop: '20px',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
                 }}
               >
-                <div style={{ width: '4px', height: '90px', background: '#475569', borderRadius: '2px' }} />
+                <div style={{ width: '4px', height: '140px', background: '#475569', opacity: 0.4, borderRadius: '2px' }} />
               </div>
-              {/* Tip */}
-              <div
-                style={{
-                  width: '0',
-                  height: '0',
-                  borderLeft: '14px solid transparent',
-                  borderRight: '14px solid transparent',
-                  borderTop: '28px solid #94a3b8',
-                }}
-              />
             </div>
+
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '32px', fontWeight: 800 }}>{penClicks}</div>
-              <div style={{ fontSize: '13px', opacity: 0.6 }}>pen clicks</div>
+              <div style={{ fontSize: '38px', fontWeight: 700, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
+                {penCount.toLocaleString()}
+              </div>
+              <div style={{ fontSize: '11px', letterSpacing: '0.1em', opacity: 0.5, textTransform: 'uppercase', marginTop: '4px' }}>
+                ACTUATIONS
+              </div>
             </div>
           </div>
         )}
 
-        {/* Tool 4: Coin Toss */}
+        {/* Tool 4: Pure Metallic Coin */}
         {activeTab === 'coin' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '36px' }}>
             <div
-              onClick={flipCoin}
+              onClick={triggerFlip}
               style={{
-                width: '130px',
-                height: '130px',
+                width: '160px',
+                height: '160px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #fbbf24, #d97706)',
-                border: '4px solid #fef3c7',
+                background: powerOn
+                  ? 'radial-gradient(circle at 35% 35%, #f1f5f9, #cbd5e1)'
+                  : 'radial-gradient(circle at 35% 35%, #2a2d3a, #13141a)',
+                border: `3px solid ${powerOn ? '#94a3b8' : '#3f4457'}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '22px',
-                fontWeight: 900,
-                color: '#78350f',
+                fontSize: '18px',
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                color: powerOn ? '#0f172a' : '#f1f5f9',
                 cursor: 'pointer',
-                transform: flipping ? 'rotateY(720deg) scale(1.15)' : 'rotateY(0deg) scale(1)',
-                transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: '0 12px 30px rgba(217,119,6,0.4)',
+                transform: isFlipping ? 'rotateX(720deg) scale(1.05)' : 'rotateX(0deg) scale(1)',
+                transition: 'transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                boxShadow: powerOn
+                  ? '0 20px 40px -10px rgba(0,0,0,0.15)'
+                  : '0 25px 50px -10px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.15)',
               }}
             >
-              {coinSide === 'heads' ? 'HEADS' : 'TAILS'}
+              {coinSide}
             </div>
-            <div style={{ display: 'flex', gap: '20px', fontSize: '14px' }}>
-              <span>Heads: <strong>{coinStats.heads}</strong></span>
-              <span>Tails: <strong>{coinStats.tails}</strong></span>
+
+            <div style={{ display: 'flex', gap: '32px', fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <span>HEADS: <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{coinStats.heads}</strong></span>
+              <span>TAILS: <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{coinStats.tails}</strong></span>
             </div>
           </div>
         )}
 
-        {/* Tool 5: Daily Mood Meter */}
+        {/* Tool 5: Minimal Atmospheric Mood Meter */}
         {activeTab === 'mood' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', width: '100%', maxWidth: '420px' }}>
-            <h3 style={{ margin: 0, fontWeight: 700 }}>How is your day going?</h3>
-            <div style={{ display: 'flex', gap: '14px', width: '100%' }}>
+          <div style={{ width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ textAlign: 'center', fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', opacity: 0.7 }}>
+              Today's Global State
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
               {[
-                { key: 'great', label: 'Great 😄' },
-                { key: 'meh', label: 'Meh 😐' },
-                { key: 'tired', label: 'Tired 🥱' },
-              ].map((item) => (
+                { id: 'serene', label: 'Balanced' },
+                { id: 'neutral', label: 'Neutral' },
+                { id: 'drained', label: 'Depleted' },
+              ].map((m) => (
                 <button
-                  key={item.key}
-                  disabled={Boolean(userVote)}
-                  onClick={() => voteMood(item.key as any)}
+                  key={m.id}
+                  disabled={Boolean(selectedMood)}
+                  onClick={() => castVote(m.id as 'serene' | 'neutral' | 'drained')}
                   style={{
                     flex: 1,
-                    padding: '16px 8px',
-                    borderRadius: '14px',
-                    border: userVote === item.key ? '2px solid #3b82f6' : `1px solid ${lightsOn ? '#e4e4e7' : '#27272a'}`,
-                    background: lightsOn ? '#ffffff' : '#141417',
+                    padding: '16px 0',
+                    borderRadius: '8px',
+                    border: selectedMood === m.id
+                      ? `2px solid ${powerOn ? '#090a0f' : '#ffffff'}`
+                      : `1px solid ${powerOn ? '#e4e4e7' : '#232530'}`,
+                    background: powerOn ? '#ffffff' : '#121318',
                     color: 'inherit',
+                    fontSize: '13px',
                     fontWeight: 600,
-                    cursor: userVote ? 'default' : 'pointer',
+                    letterSpacing: '0.04em',
+                    cursor: selectedMood ? 'default' : 'pointer',
                   }}
                 >
-                  {item.label}
+                  {m.label}
                 </button>
               ))}
             </div>
 
-            {/* Results bar */}
-            <div style={{ width: '100%', marginTop: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', opacity: 0.6, marginBottom: '6px' }}>
-                <span>😄 {Math.round((moodVotes.great / totalMoodVotes) * 100)}%</span>
-                <span>😐 {Math.round((moodVotes.meh / totalMoodVotes) * 100)}%</span>
-                <span>🥱 {Math.round((moodVotes.tired / totalMoodVotes) * 100)}%</span>
+            {/* Precision Bar */}
+            <div style={{ marginTop: '12px' }}>
+              <div style={{ height: '4px', width: '100%', display: 'flex', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ width: `${(votes.serene / totalVotes) * 100}%`, background: '#3b82f6' }} />
+                <div style={{ width: `${(votes.neutral / totalVotes) * 100}%`, background: '#71717a' }} />
+                <div style={{ width: `${(votes.drained / totalVotes) * 100}%`, background: '#ef4444' }} />
               </div>
-              <div style={{ height: '8px', width: '100%', display: 'flex', borderRadius: '999px', overflow: 'hidden' }}>
-                <div style={{ width: `${(moodVotes.great / totalMoodVotes) * 100}%`, background: '#10b981' }} />
-                <div style={{ width: `${(moodVotes.meh / totalMoodVotes) * 100}%`, background: '#f59e0b' }} />
-                <div style={{ width: `${(moodVotes.tired / totalMoodVotes) * 100}%`, background: '#ef4444' }} />
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: '11px',
+                  fontVariantNumeric: 'tabular-nums',
+                  opacity: 0.5,
+                  marginTop: '10px',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                <span>BALANCED {Math.round((votes.serene / totalVotes) * 100)}%</span>
+                <span>NEUTRAL {Math.round((votes.neutral / totalVotes) * 100)}%</span>
+                <span>DEPLETED {Math.round((votes.drained / totalVotes) * 100)}%</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Tool 6: The Longest Scroll */}
+        {/* Tool 6: Precision Monolith Scroll */}
         {activeTab === 'scroll' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-            <div style={{ marginBottom: '14px', textAlign: 'center' }}>
-              <div style={{ fontSize: '36px', fontWeight: 800 }}>{metersScrolled}m</div>
-              <div style={{ fontSize: '13px', opacity: 0.6 }}>depth reached into the void</div>
+          <div style={{ width: '100%', maxWidth: '460px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ textAlign: 'center', marginBottom: '18px' }}>
+              <div style={{ fontSize: '42px', fontWeight: 700, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.03em' }}>
+                {meters}m
+              </div>
+              <div style={{ fontSize: '11px', letterSpacing: '0.1em', opacity: 0.5, textTransform: 'uppercase', marginTop: '2px' }}>
+                Depth Descended
+              </div>
             </div>
 
             <div
-              ref={scrollContainerRef}
-              onScroll={handleScroll}
+              onScroll={onScrollContainer}
               style={{
                 width: '100%',
-                maxWidth: '460px',
                 height: '320px',
-                borderRadius: '16px',
-                border: `1px solid ${lightsOn ? '#e4e4e7' : '#27272a'}`,
-                background: lightsOn ? '#ffffff' : '#111113',
+                borderRadius: '12px',
+                border: `1px solid ${powerOn ? '#e4e4e7' : '#1f212a'}`,
+                background: powerOn ? '#ffffff' : '#0d0e12',
                 overflowY: 'scroll',
                 position: 'relative',
-                padding: '20px',
                 boxSizing: 'border-box',
               }}
             >
-              <div style={{ height: '14000px', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '100px' }}>📍 2.5m — Start descending</div>
-                <div style={{ position: 'absolute', top: '800px' }}>🦒 20m — Taller than a giraffe</div>
-                <div style={{ position: 'absolute', top: '2900px' }}>🏛️ 73m — Qutub Minar passed</div>
-                <div style={{ position: 'absolute', top: '5600px' }}>🗽 140m — Great Pyramid of Giza</div>
-                <div style={{ position: 'absolute', top: '13000px' }}>🏆 325m — Eiffel Tower conquered</div>
+              <div style={{ height: '18000px', position: 'relative', padding: '24px' }}>
+                <div style={{ position: 'absolute', top: '80px', fontSize: '12px', opacity: 0.4 }}>02m - Surface layer</div>
+                <div style={{ position: 'absolute', top: '1200px', fontSize: '12px', opacity: 0.4 }}>38m - Blue Whale body length</div>
+                <div style={{ position: 'absolute', top: '2400px', fontSize: '12px', opacity: 0.4 }}>73m - Qutub Minar, Delhi</div>
+                <div style={{ position: 'absolute', top: '4800px', fontSize: '12px', opacity: 0.4 }}>140m - Great Pyramid of Giza</div>
+                <div style={{ position: 'absolute', top: '10500px', fontSize: '12px', opacity: 0.4 }}>330m - Eiffel Tower, Paris</div>
+                <div style={{ position: 'absolute', top: '17000px', fontSize: '12px', opacity: 0.4 }}>530m - Deepest scuba descent record</div>
               </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* Floating Bottom Console Dock */}
-      <nav
+      {/* Industrial Navigation Dock */}
+      <footer
         style={{
-          marginBottom: '28px',
+          width: '100%',
           display: 'flex',
-          gap: '8px',
-          padding: '8px 12px',
-          borderRadius: '999px',
-          background: lightsOn ? '#ffffff' : '#18181b',
-          border: `1px solid ${lightsOn ? '#e4e4e7' : '#27272a'}`,
-          boxShadow: lightsOn ? '0 10px 30px rgba(0,0,0,0.06)' : '0 15px 35px rgba(0,0,0,0.6)',
+          justifyContent: 'center',
+          paddingBottom: '36px',
         }}
       >
-        {[
-          { key: 'bubble', label: '🫧 Bubbles' },
-          { key: 'pen', label: '🖊️ Pen' },
-          { key: 'switch', label: '💡 Switch' },
-          { key: 'coin', label: '🪙 Coin' },
-          { key: 'mood', label: '🎭 Mood' },
-          { key: 'scroll', label: '📜 Scroll' },
-        ].map((item) => (
-          <button
-            key={item.key}
-            onClick={() => setActiveTab(item.key as any)}
-            style={{
-              background: activeTab === item.key ? (lightsOn ? '#18181b' : '#fafafa') : 'transparent',
-              color: activeTab === item.key ? (lightsOn ? '#fafafa' : '#18181b') : 'inherit',
-              border: 'none',
-              borderRadius: '999px',
-              padding: '8px 14px',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
+        <nav
+          style={{
+            display: 'flex',
+            gap: '4px',
+            padding: '6px',
+            borderRadius: '10px',
+            background: powerOn ? '#ffffff' : '#121318',
+            border: `1px solid ${powerOn ? '#e4e4e7' : '#232530'}`,
+            boxShadow: powerOn ? '0 10px 25px rgba(0,0,0,0.04)' : '0 20px 40px rgba(0,0,0,0.6)',
+          }}
+        >
+          {[
+            { id: 'bubble', label: 'Membrane' },
+            { id: 'pen', label: 'Plunger' },
+            { id: 'switch', label: 'Rocker' },
+            { id: 'coin', label: 'Coin' },
+            { id: 'mood', label: 'Atmosphere' },
+            { id: 'scroll', label: 'Void' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              style={{
+                background: activeTab === tab.id ? (powerOn ? '#090a0f' : '#ededed') : 'transparent',
+                color: activeTab === tab.id ? (powerOn ? '#ffffff' : '#090a0f') : (powerOn ? '#71717a' : '#71717a'),
+                border: 'none',
+                borderRadius: '6px',
+                padding: '8px 16px',
+                fontSize: '12px',
+                fontWeight: 600,
+                letterSpacing: '0.04em',
+                cursor: 'pointer',
+                transition: 'all 0.12s ease',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </footer>
     </div>
   );
 }
