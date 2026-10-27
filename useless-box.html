@@ -526,6 +526,7 @@
      CURVED 3D MECHANICAL ARM (Pivots inside cavity)
      ========================================== */
   .arm-pivot {
+    visibility: hidden;
     position: absolute;
     left: 192px;
     top: 110px;
@@ -549,6 +550,11 @@
   }
 
   /* Horizontal thickness crossbar so the arm looks solid from top-down */
+  /* Keep the mechanism inside the closed box until the switch is activated. */
+  .box-3d.arm-active .arm-pivot {
+    visibility: visible;
+  }
+
   .arm-spine-top {
     position: absolute;
     left: -140px;
@@ -1172,15 +1178,19 @@
     if (isSwitchOn || isBusy) return;
 
     isBusy = true;
+    box3d.classList.add('arm-active');
     setSwitchVisual(true);
 
     const chosen = pickPersonality();
     moodNameEl.textContent = chosen.name;
 
-    await chosen.run();
-
-    moodNameEl.textContent = 'IDLE';
-    isBusy = false;
+    try {
+      await chosen.run();
+    } finally {
+      box3d.classList.remove('arm-active');
+      moodNameEl.textContent = 'IDLE';
+      isBusy = false;
+    }
   });
 </script>
 </body>
