@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bubble Wrap</title>
+<style>
+  :root {
+    --sheet-bg: rgba(235, 243, 250, 0.55);
+    --bubble-size: 64px;
+  }
+
+  * {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #1e2024;
+    background-image: 
+      radial-gradient(circle at 50% 30%, #2c3038 0%, #17191c 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: #f0f4f8;
+  }
+
+  .hud {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  .hud-label {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #9aa5b1;
+  }
+
+  .hud-counter {
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #ffffff;
+  }
+
+  /* The translucent plastic sheet */
+  .sheet-wrapper {
+    position: relative;
+    padding: 28px 24px;
+    background: var(--sheet-bg);
+    border-radius: 6px;
+    box-shadow: 
+      0 20px 50px rgba(0, 0, 0, 0.5),
+      inset 0 0 30px rgba(255, 255, 255, 0.4),
+      inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    overflow: hidden;
+  }
+
+  /* Subtle plastic seam lines along the edges */
+  .sheet-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    pointer-events: none;
+  }
+
+  .sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .bubble-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  /* Stagger every even row for genuine honeycomb packing */
+  .bubble-row:nth-child(even) {
+    margin-left: calc(var(--bubble-size) / 2 + 5px);
+  }
+
+  .bubble {
+    width: var(--bubble-size);
+    height: var(--bubble-size);
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.06s ease-out, box-shadow 0.08s ease-out;
+    
+    /* 3D inflated plastic look */
+    background: 
+      radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.25) 18%, transparent 45%),
+      radial-gradient(circle at 70% 75%, rgba(255, 255, 255, 0.35) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(210, 230, 245, 0.2) 0%, rgba(160, 190, 215, 0.45) 82%, rgba(120, 150, 175, 0.65) 100%);
+    
+    box-shadow: 
+      0 6px 10px rgba(0, 0, 0, 0.28),
+      0 2px 4px rgba(0, 0, 0, 0.18),
+      inset 0 4px 8px rgba(255, 255, 255, 0.9),
+      inset 0 -5px 10px rgba(30, 50, 70, 0.25);
+    
+    border: 1px solid rgba(255, 255, 255, 0.55);
+  }
+
+  /* Primary glossy specular highlight arc */
+  .bubble::before {
+    content: "";
+    position: absolute;
+    top: 12%;
+    left: 18%;
+    width: 38%;
+    height: 22%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 100%);
+    transform: rotate(-28deg);
+    pointer-events: none;
+  }
+
+  /* Bottom rim reflection */
+  .bubble::after {
+    content: "";
+    position: absolute;
+    bottom: 10%;
+    right: 16%;
+    width: 30%;
+    height: 14%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, transparent 75%);
+    transform: rotate(-25deg);
+    pointer-events: none;
+  }
+
+  /* Slight compression when pressing down before it pops */
+  .bubble:not(.popped):active {
+    transform: scale(0.93);
+  }
+
+  /* Deflated, wrinkled state */
+  .bubble.popped {
+    cursor: default;
+    transform: scale(0.96);
+    background: 
+      radial-gradient(circle at 50% 50%, rgba(190, 205, 220, 0.12) 0%, rgba(150, 170, 190, 0.22) 75%, rgba(130, 150, 170, 0.35) 100%);
+    box-shadow: 
+      0 1px 2px rgba(0, 0, 0, 0.08),
+      inset 0 2px 5px rgba(0, 0, 0, 0.22),
+      inset 0 0 2px rgba(255, 255, 255, 0.3);
+    border: 1px dashed rgba(255, 255, 255, 0.28);
+  }
+
+  /* Hide the inflated dome shine when popped */
+  .bubble.popped::before,
+  .bubble.popped::after {
+    opacity: 0.15;
+    transform: scale(0.7) rotate(10deg);
+  }
+
+  .crinkle-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.05s ease-in;
+  }
+
+  .bubble.popped .crinkle-svg {
+    opacity: 0.85;
+  }
+
+  /* Modal overlay when sheet is finished */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 17, 20, 0.72);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 20;
+  }
+
+  .modal-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-card {
+    background: #25282e;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 32px 36px;
+    border-radius: 14px;
+    text-align: center;
+    max-width: 380px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+    transform: translateY(10px);
+    transition: transform 0.25s ease;
+  }
+
+  .modal-backdrop.visible .modal-card {
+    transform: translateY(0);
+  }
+
+  .modal-card h2 {
+    margin: 0 0 10px;
+    font-size: 22px;
+    font-weight: 600;
+    color: #ffffff;
+  }
+
+  .modal-card p {
+    margin: 0 0 24px;
+    font-size: 16px;
+    color: #b0bac5;
+    line-height: 1.5;
+  }
+
+  .btn-fresh {
+    background: #3b82f6;
+    color: #ffffff;
+    border: none;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn-fresh:hover {
+    background: #2563eb;
+  }
+
+  .btn-fresh:active {
+    transform: scale(0.97);
+  }
+
+  @media (max-width: 600px) {
+    :root {
+      --bubble-size: 50px;
+    }
+    .sheet-wrapper {
+      padding: 18px 14px;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="hud">
+    <span class="hud-label">Popped</span>
+    <span id="pop-counter" class="hud-counter">0</span>
+  </div>
+
+  <div class="sheet-wrapper">
+    <div id="sheet" class="sheet"></div>
+  </div>
+
+  <div id="modal" class="modal-backdrop">
+    <div class="modal-card">
+      <h2>Sheet Complete</h2>
+      <p>Every bubble on this sheet is popped. Ready for a fresh sheet?</p>
+      <button id="new-sheet-btn" class="btn-fresh">Grab a Fresh Sheet</button>
+    </div>
+  </div>
+
+<script>
+  const ROWS = 7;
+  const COLS = 8;
+  const sheetEl = document.getElementById('sheet');
+  const counterEl = document.getElementById('pop-counter');
+  const modalEl = document.getElementById('modal');
+  const newSheetBtn = document.getElementById('new-sheet-btn');
+
+  let totalPops = 0;
+  let remainingOnSheet = 0;
+  let isMouseDown = false;
+  let audioCtx = null;
+
+  // Initialize Web Audio Context on first user interaction
+  function getAudioContext() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  // Synthesize a realistic plastic snap + air release pop
+  function playRealisticPop() {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+
+    // Slight randomization so no two bubbles sound identical
+    const pitchShift = 0.88 + Math.random() * 0.28;
+
+    // 1. High-pressure broadband noise snap (rupturing plastic membrane)
+    const bufferSize = Math.floor(ctx.sampleRate * 0.045);
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      // Exponential decay envelope baked into the noise buffer
+      const decay = Math.pow(1 - i / bufferSize, 2.8);
+      output[i] = (Math.random() * 2 - 1) * decay;
+    }
+
+    const whiteNoise = ctx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1350 * pitchShift, now);
+    filter.Q.setValueAtTime(2.2, now);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(1.3, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+
+    whiteNoise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    whiteNoise.start(now);
+
+    // 2. Low-end resonant thump (trapped air pocket bursting outward)
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
+    osc.type = 'triangle';
+
+    osc.frequency.setValueAtTime(340 * pitchShift, now);
+    osc.frequency.exponentialRampToValueAtTime(55 * pitchShift, now + 0.038);
+
+    oscGain.gain.setValueAtTime(0.95, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.042);
+
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.045);
+
+    // 3. Crisp high-frequency plastic crinkle tick
+    const tickOsc = ctx.createOscillator();
+    const tickGain = ctx.createGain();
+    tickOsc.type = 'sine';
+    tickOsc.frequency.setValueAtTime(2900 * pitchShift, now);
+    tickOsc.frequency.exponentialRampToValueAtTime(900, now + 0.012);
+
+    tickGain.gain.setValueAtTime(0.35, now);
+    tickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
+
+    tickOsc.connect(tickGain);
+    tickGain.connect(ctx.destination);
+    tickOsc.start(now);
+    tickOsc.stop(now + 0.014);
+  }
+
+  // Generate unique SVG crease lines for each popped bubble
+  function createCrinkleSVG() {
+    const rot = Math.floor(Math.random() * 360);
+    return `
+      <svg class="crinkle-svg" viewBox="0 0 64 64" style="transform: rotate(${rot}deg)">
+        <path d="M18 26 Q32 34 46 24" stroke="rgba(255,255,255,0.65)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M22 42 Q34 30 44 40" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        <path d="M14 34 L28 33 M38 20 L34 31" stroke="rgba(30,50,70,0.3)" stroke-width="1" fill="none" stroke-linecap="round"/>
+      </svg>
+    `;
+  }
+
+  function popBubble(bubble) {
+    if (bubble.classList.contains('popped')) return;
+
+    bubble.classList.add('popped');
+    playRealisticPop();
+
+    totalPops++;
+    remainingOnSheet--;
+    counterEl.textContent = totalPops;
+
+    if (remainingOnSheet === 0) {
+      setTimeout(() => {
+        modalEl.classList.add('visible');
+      }, 300);
+    }
+  }
+
+  function buildSheet() {
+    sheetEl.innerHTML = '';
+    remainingOnSheet = 0;
+
+    for (let r = 0; r < ROWS; r++) {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'bubble-row';
+
+      // Alternate column count slightly on staggered rows so edges look neat
+      const colsInRow = (r % 2 === 1) ? COLS - 1 : COLS;
+
+      for (let c = 0; c < colsInRow; c++) {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.innerHTML = createCrinkleSVG();
+
+        // Pop on direct click/touch
+        bubble.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          isMouseDown = true;
+          popBubble(bubble);
+        });
+
+        // Allow dragging across bubbles to pop them in a sweep
+        bubble.addEventListener('pointerenter', () => {
+          if (isMouseDown) {
+            popBubble(bubble);
+          }
+        });
+
+        rowEl.appendChild(bubble);
+        remainingOnSheet++;
+      }
+
+      sheetEl.appendChild(rowEl);
+    }
+  }
+
+  window.addEventListener('pointerup', () => {
+    isMouseDown = false;
+  });
+
+  newSheetBtn.addEventListener('click', () => {
+    modalEl.classList.remove('visible');
+    buildSheet();
+  });
+
+  // Start with the first sheet
+  buildSheet();
+</script>
+</body>
+</html>
