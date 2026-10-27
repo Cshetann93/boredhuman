@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Useless Box</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #121316;
+    --box-matte: #1c1e22;
+    --box-border: #2e3239;
+    --accent-orange: #ff5500;
+    --accent-green: #10b981;
+    --metal-light: #e2e8f0;
+    --metal-mid: #94a3b8;
+    --metal-dark: #475569;
+  }
+
+  * {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--bg-dark);
+    background-image: 
+      radial-gradient(circle at 50% 35%, #23272f 0%, #0d0e11 100%);
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #f8fafc;
+    overflow: hidden;
+  }
+
+  /* Top Telemetry Bar */
+  .hud {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 48px;
+    z-index: 10;
+  }
+
+  .hud-pill {
+    background: #181a1f;
+    border: 2px solid var(--box-border);
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 6px 0 #0a0b0d;
+  }
+
+  .hud-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #64748b;
+    font-weight: 700;
+  }
+
+  .hud-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+
+  /* Main Stage */
+  .stage {
+    position: relative;
+    width: 460px;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Whole-box animations for temper tantrums */
+  .box-rig {
+    position: relative;
+    width: 380px;
+    height: 220px;
+    transition: transform 0.08s ease;
+  }
+
+  .box-rig.shake-mild {
+    animation: shakeMild 0.12s infinite;
+  }
+
+  .box-rig.shake-violent {
+    animation: shakeViolent 0.09s infinite;
+  }
+
+  .box-rig.hop {
+    transform: translateY(-16px) rotate(-2deg);
+  }
+
+  @keyframes shakeMild {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-2px, 1px); }
+    75% { transform: translate(2px, -1px); }
+  }
+
+  @keyframes shakeViolent {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    20% { transform: translate(-5px, -2px) rotate(-1.5deg); }
+    40% { transform: translate(5px, 2px) rotate(1.5deg); }
+    60% { transform: translate(-4px, 1px) rotate(-1deg); }
+    80% { transform: translate(4px, -2px) rotate(1deg); }
+  }
+
+  /* The Matte Black Enclosure */
+  .box-chassis {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: 
+      linear-gradient(145deg, #24272d 0%, #16181c 100%);
+    border-radius: 14px;
+    border: 2px solid #333842;
+    box-shadow: 
+      0 24px 0 #0c0d0f,
+      0 35px 60px rgba(0, 0, 0, 0.75),
+      inset 0 2px 3px rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+
+  /* Brushed walnut side trim accent */
+  .box-chassis::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 18px;
+    background: linear-gradient(90deg, #5c3a21, #7c4d2b 50%, #4a2e19);
+    border-top: 2px solid #111;
+  }
+
+  /* Corner Hex Screws */
+  .screw {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #121316;
+    border: 2px solid #383d47;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.9);
+    z-index: 6;
+  }
+  .screw::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 1px;
+    width: 6px;
+    height: 2px;
+    background: #383d47;
+    transform: rotate(35deg);
+  }
+  .screw.tl { top: 14px; left: 14px; }
+  .screw.tr { top: 14px; right: 14px; }
+  .screw.bl { bottom: 30px; left: 14px; }
+  .screw.br { bottom: 30px; right: 14px; }
+
+  /* Internal Dark Cavity (Left Half) */
+  .cavity {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 195px;
+    height: 182px;
+    background: #070809;
+    border-radius: 8px;
+    box-shadow: inset 0 10px 25px #000000;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  /* Glowing Red Robot Eyes inside the dark cavity */
+  .cavity-eyes {
+    position: absolute;
+    top: 26px;
+    right: 28px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .cavity-eyes.glow {
+    opacity: 1;
+  }
+  .eye {
+    width: 8px;
+    height: 4px;
+    background: #ff2a2a;
+    border-radius: 2px;
+    box-shadow: 0 0 10px #ff2a2a, 0 0 20px #ff0000;
+  }
+
+  /* The Hinged Lid Door */
+  .lid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 210px;
+    height: 202px;
+    background: linear-gradient(145deg, #262930 0%, #191b1f 100%);
+    border-right: 3px solid #0e0f12;
+    border-radius: 12px 0 0 0;
+    transform-origin: left center;
+    transform: perspective(700px) rotateY(0deg);
+    z-index: 4;
+    box-shadow: inset -2px 0 4px rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+  }
+
+  /* Seam line when lid is closed */
+  .seam-shadow {
+    position: absolute;
+    top: 0;
+    left: 209px;
+    width: 2px;
+    height: 202px;
+    background: #0a0b0d;
+    z-index: 3;
+  }
+
+  /* Mechanical Arm SVG Layer */
+  .arm-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 380px;
+    height: 220px;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  /* Right Side Panel: Switch Assembly */
+  .switch-zone {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 170px;
+    height: 202px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+  }
+
+  /* Status LED above switch */
+  .led-housing {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    background: #111317;
+    padding: 5px 12px;
+    border-radius: 99px;
+    border: 1px solid #2b303a;
+  }
+
+  .led-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #334155;
+    transition: background 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  .led-dot.active {
+    background: var(--accent-orange);
+    box-shadow: 0 0 12px var(--accent-orange), 0 0 4px #ffffff;
+  }
+
+  .led-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #94a3b8;
+  }
+
+  /* Heavy Industrial Toggle Base */
+  .toggle-plate {
+    position: relative;
+    width: 76px;
+    height: 76px;
+    border-radius: 16px;
+    background: linear-gradient(145deg, #2e333d, #181b20);
+    border: 2px solid #475569;
+    box-shadow: 
+      0 8px 16px rgba(0,0,0,0.6),
+      inset 0 2px 2px rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  /* Hex nut ring */
+  .toggle-nut {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #0f1115 35%, #64748b 38%, #334155 70%);
+    border: 2px solid #94a3b8;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* The Chrome Bat Handle */
+  .toggle-bat {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 45%, #475569 100%);
+    box-shadow: 0 6px 10px rgba(0,0,0,0.65);
+    transition: transform 0.09s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* OFF state leans right (away from the lid) */
+    transform: translateX(11px) scale(1);
+  }
+
+  /* Reflective tip on bat handle */
+  .toggle-bat::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    width: 8px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  /* ON state leans left (toward the lid so the finger can push it right) */
+  .toggle-plate.is-on .toggle-bat {
+    transform: translateX(-11px) scale(1.06);
+    background: linear-gradient(135deg, #fff7ed 0%, #fdba74 40%, #ea580c 100%);
+  }
+
+  .switch-labels {
+    width: 90px;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+  }
+
+  .switch-labels span.lit {
+    color: #f8fafc;
+  }
+
+  /* Bottom Status Ticker */
+  .footer-hint {
+    margin-top: 36px;
+    font-size: 13px;
+    color: #64748b;
+    letter-spacing: 0.5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+  <div class="hud">
+    <div class="hud-pill">
+      <span class="hud-label">Flips</span>
+      <span id="flip-count" class="hud-value">0</span>
+    </div>
+    <div class="hud-pill">
+      <span class="hud-label">Mood</span>
+      <span id="mood-name" class="hud-value">IDLE</span>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div id="box-rig" class="box-rig">
+      <div class="box-chassis">
+        <!-- Corner Bolts -->
+        <div class="screw tl"></div>
+        <div class="screw tr"></div>
+        <div class="screw bl"></div>
+        <div class="screw br"></div>
+
+        <!-- Dark Interior -->
+        <div class="cavity">
+          <div id="cavity-eyes" class="cavity-eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
+          </div>
+        </div>
+
+        <!-- Mechanical Arm SVG (sits above cavity, below lid door) -->
+        <svg class="arm-layer" viewBox="0 0 380 220">
+          <defs>
+            <linearGradient id="metalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#f1f5f9"/>
+              <stop offset="45%" stop-color="#94a3b8"/>
+              <stop offset="100%" stop-color="#334155"/>
+            </linearGradient>
+            <linearGradient id="rubberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ff6a00"/>
+              <stop offset="100%" stop-color="#b83300"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Arm pivots from inside the left cavity -->
+          <g id="mech-arm" transform="translate(-140, 108)">
+            <!-- Main Curved Metallic Finger -->
+            <rect x="0" y="-14" width="245" height="28" rx="14" fill="url(#metalGrad)" stroke="#1e293b" stroke-width="2"/>
+            <!-- Industrial Cutout Slots -->
+            <rect x="45" y="-6" width="36" height="12" rx="6" fill="#0f172a"/>
+            <rect x="95" y="-6" width="36" height="12" rx="6" fill="#0f172a"/>
+            <rect x="145" y="-6" width="36" height="12" rx="6" fill="#0f172a"/>
+            <!-- Joint Rivets -->
+            <circle cx="25" cy="0" r="4" fill="#334155"/>
+            <circle cx="202" cy="0" r="4" fill="#334155"/>
+            <!-- High-Friction Orange Bumper Tip -->
+            <path d="M 225 -14 L 242 -14 A 14 14 0 0 1 256 0 A 14 14 0 0 1 242 14 L 225 14 Z" fill="url(#rubberGrad)"/>
+          </g>
+        </svg>
+
+        <!-- Hinged Lid Door -->
+        <div id="lid" class="lid">
+          <div class="screw tl"></div>
+          <div class="screw bl"></div>
+        </div>
+        <div class="seam-shadow"></div>
+
+        <!-- Right Side Switch Panel -->
+        <div class="switch-zone">
+          <div class="led-housing">
+            <div id="led-dot" class="led-dot"></div>
+            <span id="led-text" class="led-text">OFF</span>
+          </div>
+
+          <div id="toggle-plate" class="toggle-plate" role="button" aria-label="Toggle Switch">
+            <div class="toggle-nut">
+              <div class="toggle-bat"></div>
+            </div>
+          </div>
+
+          <div class="switch-labels">
+            <span id="lbl-on">ON</span>
+            <span id="lbl-off" class="lit">OFF</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-hint">CLICK THE SWITCH TO TURN IT ON</div>
+
+<script>
+  const togglePlate = document.getElementById('toggle-plate');
+  const ledDot = document.getElementById('led-dot');
+  const ledText = document.getElementById('led-text');
+  const lblOn = document.getElementById('lbl-on');
+  const lblOff = document.getElementById('lbl-off');
+  const lidEl = document.getElementById('lid');
+  const armEl = document.getElementById('mech-arm');
+  const boxRig = document.getElementById('box-rig');
+  const eyesEl = document.getElementById('cavity-eyes');
+  const flipCountEl = document.getElementById('flip-count');
+  const moodNameEl = document.getElementById('mood-name');
+
+  let isSwitchOn = false;
+  let isBusy = false;
+  let flipCount = 0;
+  let lastPersonalityIndex = -1;
+
+  // Current animated coordinates (0 to 1)
+  let currentLid = 0;
+  let currentArm = 0;
+
+  // Web Audio Synthesizer
+  let audioCtx = null;
+  function getAudio() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  // Crisp metallic toggle snap
+  function soundSwitchClick(turningOn) {
+    const ctx = getAudio();
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(turningOn ? 1900 : 1400, now);
+    osc.frequency.exponentialRampToValueAtTime(220, now + 0.028);
+
+    gain.gain.setValueAtTime(0.7, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.028);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.03);
+  }
+
+  // Servo motor whine proportional to movement duration & distance
+  function soundServo(durationMs, pitchBase = 240) {
+    if (durationMs < 35) return;
+    const ctx = getAudio();
+    const now = ctx.currentTime;
+    const dur = durationMs / 1000;
+
+    const osc = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(pitchBase, now);
+    osc.frequency.linearRampToValueAtTime(pitchBase * 1.18, now + dur * 0.5);
+    osc.frequency.linearRampToValueAtTime(pitchBase * 0.92, now + dur);
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.Q.setValueAtTime(3.0, now);
+
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.14, now + 0.02);
+    gain.gain.setValueAtTime(0.14, Math.max(now + 0.02, now + dur - 0.02));
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur);
+  }
+
+  // Heavy wooden lid slam
+  function soundLidSlam(intensity = 1) {
+    const ctx = getAudio();
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(135 * intensity, now);
+    osc.frequency.exponentialRampToValueAtTime(32, now + 0.09);
+
+    gain.gain.setValueAtTime(Math.min(1, 0.85 * intensity), now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.1);
+  }
+
+  // Angry low motor growl for vibration/tantrums
+  function soundGrowl(durationMs) {
+    const ctx = getAudio();
+    const now = ctx.currentTime;
+    const dur = durationMs / 1000;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(65, now);
+
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur);
+  }
+
+  // Visual render helpers
+  function renderLid(val) {
+    currentLid = val;
+    // Opens up to -76 degrees around left hinge
+    const angle = -val * 76;
+    lidEl.style.transform = `perspective(700px) rotateY(${angle}deg)`;
+  }
+
+  function renderArm(val) {
+    currentArm = val;
+    // Sweeps from X = -140 (hidden inside cavity) to X = 42 (touching toggle bat)
+    const xPos = -140 + (val * 182);
+    armEl.setAttribute('transform', `translate(${xPos}, 108)`);
+  }
+
+  function setSwitchVisual(on,ZoneFlip = false) {
+    isSwitchOn = on;
+    if (on) {
+      togglePlate.classList.add('is-on');
+      ledDot.classList.add('active');
+      ledText.textContent = 'ON';
+      lblOn.classList.add('lit');
+      lblOff.classList.remove('lit');
+    } else {
+      togglePlate.classList.remove('is-on');
+      ledDot.classList.remove('active');
+      ledText.textContent = 'OFF';
+      lblOn.classList.remove('lit');
+      lblOff.classList.add('lit');
+    }
+    soundSwitchClick(on);
+  }
+
+  // Promise-based animation primitives
+  const wait = (ms) => new Promise(res => setTimeout(res, ms));
+
+  function tween(from, to, duration, onUpdate) {
+    return new Promise(resolve => {
+      if (duration <= 0) {
+        onUpdate(to);
+        resolve();
+        return;
+      }
+      const start = performance.now();
+      function frame(now) {
+        const t = Math.min(1, (now - start) / duration);
+        // Smooth ease-in-out
+        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        onUpdate(from + (to - from) * eased);
+        if (t < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          resolve();
+        }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  async function moveLid(target, ms, slamSound = false) {
+    const dist = Math.abs(target - currentLid);
+    if (dist > 0.05) {
+      soundServo(ms, target > currentLid ? 260 : 210);
+    }
+    await tween(currentLid, target, ms, renderLid);
+    if (target === 0 && slamSound) {
+      soundLidSlam(ms < 120 ? 1.3 : 0.8);
+    }
+  }
+
+  async function moveArm(target, ms) {
+    const dist = Math.abs(target - currentArm);
+    if (dist > 0.05) {
+      soundServo(ms, target > currentArm ? 330 : 280);
+    }
+    await tween(currentArm, target, ms, renderArm);
+  }
+
+  function hitOff() {
+    if (isSwitchOn) {
+      setSwitchVisual(false);
+      flipCount++;
+      flipCountEl.textContent = flipCount;
+    }
+  }
+
+  // ==========================================
+  // THE 15 PERSONALITIES
+  // ==========================================
+  const personalities = [
+    {
+      name: "01 / ALL BUSINESS",
+      run: async () => {
+        await wait(140);
+        await moveLid(0.85, 180);
+        await moveArm(1.0, 190);
+        hitOff();
+        await moveArm(0, 170);
+        await moveLid(0, 160, true);
+      }
+    },
+    {
+      name: "02 / HAIR TRIGGER",
+      run: async () => {
+        await moveLid(1.0, 65);
+        await moveArm(1.03, 70);
+        hitOff();
+        await moveArm(0, 65);
+        await moveLid(0, 65, true);
+      }
+    },
+    {
+      name: "03 / PASSIVE AGGRESSIVE",
+      run: async () => {
+        await wait(300);
+        await moveLid(0.35, 900);
+        eyesEl.classList.add('glow');
+        await wait(1100);
+        await moveLid(0.85, 650);
+        await moveArm(0.92, 1300); // Creeps right up to the switch
+        await wait(700);
+        await moveArm(1.0, 90);
+        hitOff();
+        eyesEl.classList.remove('glow');
+        await moveArm(0, 900);
+        await moveLid(0, 1000, true);
+      }
+    },
+    {
+      name: "04 / THE 4-SECOND FAKEOUT",
+      run: async () => {
+        await wait(3800); // Complete dead silence first
+        await moveLid(1.0, 80);
+        await moveArm(1.02, 85);
+        hitOff();
+        await moveArm(0, 80);
+        await moveLid(0, 80, true);
+      }
+    },
+    {
+      name: "05 / PARANOID PEEKER",
+      run: async () => {
+        await wait(200);
+        await moveLid(0.28, 220);
+        eyesEl.classList.add('glow');
+        await wait(650);
+        await moveLid(0, 140, true);
+        await wait(500);
+        await moveLid(0.35, 200);
+        await wait(550);
+        await moveLid(0.9, 140);
+        await moveArm(1.0, 140);
+        hitOff();
+        eyesEl.classList.remove('glow');
+        await moveArm(0, 120);
+        await moveLid(0, 110, true);
+      }
+    },
+    {
+      name: "06 / TEMPER TANTRUM",
+      run: async () => {
+        boxRig.classList.add('shake-violent');
+        soundGrowl(650);
+        await wait(650);
+        boxRig.classList.remove('shake-violent');
+        await moveLid(1.0, 70);
+        // Slams the switch 3 times
+        await moveArm(1.03, 75);
+        hitOff();
+        boxRig.classList.add('hop');
+        soundLidSlam(1.4);
+        await wait(70);
+        boxRig.classList.remove('hop');
+        await moveArm(0.75, 80);
+        await moveArm(1.03, 70);
+        soundLidSlam(1.2);
+        await moveArm(0, 100);
+        // Slams lid twice
+        await moveLid(0, 70, true);
+        await wait(120);
+        await moveLid(0.45, 90);
+        await moveLid(0, 65, true);
+      }
+    },
+    {
+      name: "07 / PSYCH OUT",
+      run: async () => {
+        await wait(150);
+        await moveLid(0.85, 180);
+        await moveArm(0.88, 200); // Stops 4mm short of the switch!
+        await wait(850);
+        await moveArm(0, 180);
+        await moveLid(0, 180, true);
+        await wait(950); // Lets you think it broke
+        await moveLid(0.95, 85);
+        await moveArm(1.02, 85);
+        hitOff();
+        await moveArm(0, 90);
+        await moveLid(0, 85, true);
+      }
+    },
+    {
+      name: "08 / THE GUARD DOG",
+      run: async () => {
+        await moveLid(0.85, 170);
+        await moveArm(1.0, 170);
+        hitOff();
+        // Holds its finger firmly on the switch so you cannot touch it
+        eyesEl.classList.add('glow');
+        await wait(1600);
+        await moveArm(0.5, 220);
+        await wait(450);
+        // Lunges back at the switch as a warning
+        await moveArm(0.95, 80);
+        await wait(450);
+        eyesEl.classList.remove('glow');
+        await moveArm(0, 200);
+        await moveLid(0, 180, true);
+      }
+    },
+    {
+      name: "09 / LOW BATTERY",
+      run: async () => {
+        await moveLid(0.5, 450);
+        await wait(250);
+        await moveLid(0.25, 300); // Droops down
+        await moveLid(0.85, 650);
+        await moveArm(0.55, 500);
+        await wait(350);
+        await moveArm(0.45, 250); // Sags back
+        await moveArm(1.0, 850);  // Barely pushes it off
+        hitOff();
+        await wait(300);
+        await moveArm(0, 750);
+        await moveLid(0, 600, true);
+      }
+    },
+    {
+      name: "10 / OCD DOUBLE-CHECK",
+      run: async () => {
+        await moveLid(0.85, 160);
+        await moveArm(1.0, 160);
+        hitOff();
+        await moveArm(0, 150);
+        await moveLid(0, 150, true);
+        await wait(550);
+        // Comes back out just to tap the already-OFF switch
+        await moveLid(0.75, 150);
+        await moveArm(0.98, 160);
+        soundSwitchClick(false);
+        await wait(120);
+        await moveArm(0.82, 100);
+        await moveArm(0.98, 100);
+        soundSwitchClick(false);
+        await moveArm(0, 150);
+        await moveLid(0, 140, true);
+      }
+    },
+    {
+      name: "11 / CAFFEINE Jitters",
+      run: async () => {
+        boxRig.classList.add('shake-mild');
+        for (let i = 0; i < 4; i++) {
+          await moveLid(0.35, 55);
+          await moveLid(0.1, 55);
+        }
+        await moveLid(0.95, 70);
+        await moveArm(1.02, 75);
+        hitOff();
+        boxRig.classList.remove('shake-mild');
+        await moveArm(0, 75);
+        await moveLid(0, 70, true);
+      }
+    },
+    {
+      name: "12 / HEAVY SIGH",
+      run: async () => {
+        // Lid rises and drops like a deep chest sigh
+        await moveLid(0.45, 650);
+        await wait(250);
+        await moveLid(0.08, 600);
+        await wait(450);
+        await moveLid(0.82, 350);
+        await moveArm(1.0, 380);
+        hitOff();
+        await moveArm(0, 320);
+        await moveLid(0, 350, true);
+      }
+    },
+    {
+      name: "13 / SHOWBOAT",
+      run: async () => {
+        // Rhythmically claps the lid before flipping
+        await moveLid(0.55, 110);
+        await moveLid(0, 90, true);
+        await wait(90);
+        await moveLid(0.55, 110);
+        await moveLid(0, 90, true);
+        await wait(180);
+        await moveLid(0.95, 120);
+        await moveArm(1.0, 130);
+        hitOff();
+        await moveArm(0, 120);
+        await moveLid(0, 110, true);
+      }
+    },
+    {
+      name: "14 / NINJA SNATCH",
+      run: async () => {
+        await wait(600);
+        // Barely cracks the lid open and squeezes the finger through the gap
+        await moveLid(0.48, 80);
+        await moveArm(1.0, 70);
+        hitOff();
+        await moveArm(0, 65);
+        await moveLid(0, 65, true);
+      }
+    },
+    {
+      name: "15 / EXISTENTIAL CRISIS",
+      run: async () => {
+        await moveLid(0.85, 260);
+        await moveArm(0.65, 280);
+        eyesEl.classList.add('glow');
+        // Stares at the switch questioning its life purpose
+        await wait(1500);
+        await moveLid(0.55, 400); // Lid droops onto its own arm
+        await wait(900);
+        await moveLid(0.85, 200);
+        await moveArm(1.0, 300);
+        hitOff();
+        eyesEl.classList.remove('glow');
+        await moveArm(0, 350);
+        await moveLid(0, 400, true);
+      }
+    }
+  ];
+
+  function pickPersonality() {
+    // First 2 flips use classic quick responses to establish the joke
+    if (flipCount === 0) return personalities[0];
+    if (flipCount === 1) return personalities[1];
+
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * personalities.length);
+    } while (idx === lastPersonalityIndex);
+
+    lastPersonalityIndex = idx;
+    return personalities[idx];
+  }
+
+  togglePlate.addEventListener('pointerdown', async (e) => {
+    e.preventDefault();
+    if (isSwitchOn || isBusy) return;
+
+    isBusy = true;
+    setSwitchVisual(true);
+
+    const chosen = pickPersonality();
+    moodNameEl.textContent = chosen.name;
+
+    await chosen.run();
+
+    moodNameEl.textContent = 'IDLE';
+    isBusy = false;
+  });
+</script>
+</body>
+</html>
