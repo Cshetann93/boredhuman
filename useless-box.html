@@ -3,20 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Useless Box</title>
+<title>The Useless Box 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-dark: #121316;
-    --box-matte: #1c1e22;
-    --box-border: #2e3239;
+    --bg-dark: #0e1013;
     --accent-orange: #ff5500;
-    --accent-green: #10b981;
-    --metal-light: #e2e8f0;
-    --metal-mid: #94a3b8;
-    --metal-dark: #475569;
   }
 
   * {
@@ -30,7 +24,7 @@
     min-height: 100vh;
     background-color: var(--bg-dark);
     background-image: 
-      radial-gradient(circle at 50% 35%, #23272f 0%, #0d0e11 100%);
+      radial-gradient(circle at 50% 25%, #252a34 0%, #0a0b0e 75%);
     font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
     display: flex;
     flex-direction: column;
@@ -40,23 +34,23 @@
     overflow: hidden;
   }
 
-  /* Top Telemetry Bar */
+  /* Top Telemetry HUD */
   .hud {
     display: flex;
     gap: 16px;
-    margin-bottom: 48px;
-    z-index: 10;
+    margin-bottom: 30px;
+    z-index: 20;
   }
 
   .hud-pill {
-    background: #181a1f;
-    border: 2px solid var(--box-border);
+    background: #16181d;
+    border: 2px solid #2e333d;
     padding: 10px 20px;
     border-radius: 8px;
     display: flex;
     align-items: center;
     gap: 12px;
-    box-shadow: 0 6px 0 #0a0b0d;
+    box-shadow: 0 6px 0 #08090b;
   }
 
   .hud-label {
@@ -74,203 +68,271 @@
     color: #f8fafc;
   }
 
-  /* Main Stage */
-  .stage {
-    position: relative;
-    width: 460px;
-    height: 320px;
+  /* 3D Viewport & Camera */
+  .viewport {
+    width: 640px;
+    height: 420px;
+    perspective: 1100px;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
   }
 
-  /* Whole-box animations for temper tantrums */
-  .box-rig {
-    position: relative;
+  .camera-rig {
     width: 380px;
     height: 220px;
-    transition: transform 0.08s ease;
-  }
-
-  .box-rig.shake-mild {
-    animation: shakeMild 0.12s infinite;
-  }
-
-  .box-rig.shake-violent {
-    animation: shakeViolent 0.09s infinite;
-  }
-
-  .box-rig.hop {
-    transform: translateY(-16px) rotate(-2deg);
-  }
-
-  @keyframes shakeMild {
-    0%, 100% { transform: translate(0, 0); }
-    25% { transform: translate(-2px, 1px); }
-    75% { transform: translate(2px, -1px); }
-  }
-
-  @keyframes shakeViolent {
-    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-    20% { transform: translate(-5px, -2px) rotate(-1.5deg); }
-    40% { transform: translate(5px, 2px) rotate(1.5deg); }
-    60% { transform: translate(-4px, 1px) rotate(-1deg); }
-    80% { transform: translate(4px, -2px) rotate(1deg); }
-  }
-
-  /* The Matte Black Enclosure */
-  .box-chassis {
     position: relative;
-    width: 100%;
-    height: 100%;
-    background: 
-      linear-gradient(145deg, #24272d 0%, #16181c 100%);
-    border-radius: 14px;
-    border: 2px solid #333842;
-    box-shadow: 
-      0 24px 0 #0c0d0f,
-      0 35px 60px rgba(0, 0, 0, 0.75),
-      inset 0 2px 3px rgba(255, 255, 255, 0.08);
-    overflow: hidden;
+    transform-style: preserve-3d;
+    transform: rotateX(52deg) rotateZ(-18deg);
+    transition: transform 0.12s ease-out;
   }
 
-  /* Brushed walnut side trim accent */
-  .box-chassis::after {
-    content: "";
+  .box-3d {
+    width: 380px;
+    height: 220px;
+    position: relative;
+    transform-style: preserve-3d;
+  }
+
+  /* Whole-box physical shake states */
+  .box-3d.shake-mild {
+    animation: shake3DMild 0.1s infinite;
+  }
+
+  .box-3d.shake-violent {
+    animation: shake3DViolent 0.08s infinite;
+  }
+
+  .box-3d.hop {
+    transform: translateZ(22px) rotateY(-3deg);
+    transition: transform 0.06s ease-out;
+  }
+
+  @keyframes shake3DMild {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    25% { transform: translate3d(-3px, 2px, 1px); }
+    75% { transform: translate3d(3px, -2px, 0); }
+  }
+
+  @keyframes shake3DViolent {
+    0%, 100% { transform: translate3d(0, 0, 0) rotateZ(0deg); }
+    20% { transform: translate3d(-6px, -3px, 4px) rotateZ(-1.5deg); }
+    40% { transform: translate3d(6px, 3px, 0px) rotateZ(1.5deg); }
+    60% { transform: translate3d(-5px, 2px, 3px) rotateZ(-1deg); }
+    80% { transform: translate3d(5px, -3px, 1px) rotateZ(1deg); }
+  }
+
+  /* Ground Shadow on the Desk */
+  .desk-shadow {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 18px;
-    background: linear-gradient(90deg, #5c3a21, #7c4d2b 50%, #4a2e19);
-    border-top: 2px solid #111;
+    inset: -12px;
+    background: rgba(0, 0, 0, 0.78);
+    filter: blur(22px);
+    transform: translateZ(-126px);
+    border-radius: 18px;
+    pointer-events: none;
   }
 
-  /* Corner Hex Screws */
+  /* ==========================================
+     EXTRUDED 3D CHASSIS WALLS (Depth = 124px)
+     ========================================== */
+  .wall {
+    position: absolute;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+  }
+
+  /* Front Wall (facing the viewer) */
+  .wall-front {
+    width: 380px;
+    height: 124px;
+    left: 0;
+    top: 158px;
+    transform: translateZ(-62px) rotateX(-90deg);
+    background: 
+      linear-gradient(180deg, #1d2026 0%, #121418 76%, #5c3a21 76%, #3f2614 100%);
+    border: 2px solid #2e333d;
+    border-top: 2px solid #383e4c;
+    box-shadow: inset 0 12px 25px rgba(0,0,0,0.55);
+  }
+
+  /* Metallic manufacturer badge on the front wall */
+  .front-badge {
+    position: absolute;
+    right: 26px;
+    top: 32px;
+    padding: 4px 10px;
+    background: #0e1014;
+    border: 1px solid #333946;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #64748b;
+    box-shadow: inset 0 1px 2px #000;
+  }
+
+  /* Right Wall (facing right) */
+  .wall-right {
+    width: 124px;
+    height: 220px;
+    left: 318px;
+    top: 0;
+    transform: translateZ(-62px) rotateY(90deg);
+    background: 
+      linear-gradient(90deg, #16181d 0%, #0e1014 76%, #4a2e19 76%, #2e1c0e 100%);
+    border: 2px solid #252932;
+  }
+
+  /* Left Wall */
+  .wall-left {
+    width: 124px;
+    height: 220px;
+    left: -62px;
+    top: 0;
+    transform: translateZ(-62px) rotateY(-90deg);
+    background: 
+      linear-gradient(270deg, #22262e 0%, #15181d 76%, #6e4527 76%, #4a2e19 100%);
+    border: 2px solid #2e333d;
+  }
+
+  /* Back Wall */
+  .wall-back {
+    width: 380px;
+    height: 124px;
+    left: 0;
+    top: -62px;
+    transform: translateZ(-62px) rotateX(90deg);
+    background: #101216;
+    border: 2px solid #1f232b;
+  }
+
+  /* ==========================================
+     RECESSED DARK CAVITY (Left Half)
+     ========================================== */
+  .cavity-well {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 196px;
+    height: 196px;
+    background: #040507;
+    transform: translateZ(-32px);
+    border-radius: 6px;
+    box-shadow: inset 0 0 35px #000000;
+  }
+
+  /* Inner rim walls so looking inside shows depth */
+  .cavity-rim-front {
+    position: absolute;
+    left: 12px;
+    top: 192px;
+    width: 196px;
+    height: 32px;
+    background: linear-gradient(180deg, #15181e, #050608);
+    transform: translateZ(-16px) rotateX(90deg);
+  }
+
+  .cavity-rim-back {
+    position: absolute;
+    left: 12px;
+    top: -4px;
+    width: 196px;
+    height: 32px;
+    background: linear-gradient(180deg, #050608, #111318);
+    transform: translateZ(-16px) rotateX(-90deg);
+  }
+
+  .cavity-rim-divider {
+    position: absolute;
+    left: 192px;
+    top: 12px;
+    width: 32px;
+    height: 196px;
+    background: #0c0e12;
+    transform: translateZ(-16px) rotateY(-90deg);
+  }
+
+  /* Glowing Red Eyes deep inside the cavity */
+  .cavity-eyes {
+    position: absolute;
+    top: 52px;
+    right: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .cavity-eyes.glow {
+    opacity: 1;
+  }
+
+  .eye {
+    width: 6px;
+    height: 10px;
+    background: #ff2a2a;
+    border-radius: 3px;
+    box-shadow: 0 0 12px #ff2a2a, 0 0 24px #ff0000;
+  }
+
+  /* ==========================================
+     RIGHT DECK SURFACE & 3D TOGGLE SWITCH
+     ========================================== */
+  .right-deck {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 172px;
+    height: 220px;
+    background: linear-gradient(135deg, #262a33 0%, #181b21 100%);
+    border: 2px solid #363c48;
+    border-left: 2px solid #0e1014;
+    transform-style: preserve-3d;
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.08);
+  }
+
+  /* Corner Hex Bolts */
   .screw {
     position: absolute;
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: #121316;
-    border: 2px solid #383d47;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.9);
-    z-index: 6;
+    background: #111317;
+    border: 2px solid #3b4250;
+    transform: translateZ(1px);
   }
   .screw::before {
     content: "";
     position: absolute;
-    top: 4px;
+    top: 3px;
     left: 1px;
     width: 6px;
     height: 2px;
-    background: #383d47;
+    background: #3b4250;
     transform: rotate(35deg);
   }
-  .screw.tl { top: 14px; left: 14px; }
   .screw.tr { top: 14px; right: 14px; }
-  .screw.bl { bottom: 30px; left: 14px; }
-  .screw.br { bottom: 30px; right: 14px; }
+  .screw.br { bottom: 14px; right: 14px; }
+  .screw.tl { top: 14px; left: 14px; }
+  .screw.bl { bottom: 14px; left: 14px; }
 
-  /* Internal Dark Cavity (Left Half) */
-  .cavity {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    width: 195px;
-    height: 182px;
-    background: #070809;
-    border-radius: 8px;
-    box-shadow: inset 0 10px 25px #000000;
-    overflow: hidden;
-    z-index: 1;
-  }
-
-  /* Glowing Red Robot Eyes inside the dark cavity */
-  .cavity-eyes {
+  /* Status LED */
+  .led-housing {
     position: absolute;
     top: 26px;
-    right: 28px;
-    display: flex;
-    gap: 8px;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-  }
-  .cavity-eyes.glow {
-    opacity: 1;
-  }
-  .eye {
-    width: 8px;
-    height: 4px;
-    background: #ff2a2a;
-    border-radius: 2px;
-    box-shadow: 0 0 10px #ff2a2a, 0 0 20px #ff0000;
-  }
-
-  /* The Hinged Lid Door */
-  .lid {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 210px;
-    height: 202px;
-    background: linear-gradient(145deg, #262930 0%, #191b1f 100%);
-    border-right: 3px solid #0e0f12;
-    border-radius: 12px 0 0 0;
-    transform-origin: left center;
-    transform: perspective(700px) rotateY(0deg);
-    z-index: 4;
-    box-shadow: inset -2px 0 4px rgba(255, 255, 255, 0.05);
-    pointer-events: none;
-  }
-
-  /* Seam line when lid is closed */
-  .seam-shadow {
-    position: absolute;
-    top: 0;
-    left: 209px;
-    width: 2px;
-    height: 202px;
-    background: #0a0b0d;
-    z-index: 3;
-  }
-
-  /* Mechanical Arm SVG Layer */
-  .arm-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 380px;
-    height: 220px;
-    z-index: 2;
-    pointer-events: none;
-    overflow: hidden;
-  }
-
-  /* Right Side Panel: Switch Assembly */
-  .switch-zone {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 170px;
-    height: 202px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 5;
-  }
-
-  /* Status LED above switch */
-  .led-housing {
+    left: 50%;
+    transform: translateX(-50%) translateZ(2px);
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 22px;
-    background: #111317;
+    background: #0f1115;
     padding: 5px 12px;
     border-radius: 99px;
-    border: 1px solid #2b303a;
+    border: 1px solid #2d333f;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
   }
 
   .led-dot {
@@ -283,7 +345,7 @@
 
   .led-dot.active {
     background: var(--accent-orange);
-    box-shadow: 0 0 12px var(--accent-orange), 0 0 4px #ffffff;
+    box-shadow: 0 0 14px var(--accent-orange), 0 0 5px #ffffff;
   }
 
   .led-text {
@@ -294,73 +356,100 @@
     color: #94a3b8;
   }
 
-  /* Heavy Industrial Toggle Base */
-  .toggle-plate {
-    position: relative;
+  /* Interactive 3D Switch Assembly */
+  .switch-assembly {
+    position: absolute;
+    top: 72px;
+    left: 48px;
     width: 76px;
     height: 76px;
-    border-radius: 16px;
-    background: linear-gradient(145deg, #2e333d, #181b20);
-    border: 2px solid #475569;
-    box-shadow: 
-      0 8px 16px rgba(0,0,0,0.6),
-      inset 0 2px 2px rgba(255,255,255,0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transform-style: preserve-3d;
     cursor: pointer;
   }
 
-  /* Hex nut ring */
-  .toggle-nut {
+  .washer-plate {
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    background: linear-gradient(145deg, #323844, #171a20);
+    border: 2px solid #475569;
+    transform: translateZ(3px);
+    box-shadow: 0 10px 18px rgba(0,0,0,0.65);
+  }
+
+  .hex-nut {
+    position: absolute;
+    top: 16px;
+    left: 16px;
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: radial-gradient(circle, #0f1115 35%, #64748b 38%, #334155 70%);
-    border: 2px solid #94a3b8;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: radial-gradient(circle, #0b0d11 32%, #64748b 36%, #334155 72%);
+    border: 2px solid #cbd5e1;
+    transform: translateZ(7px);
+    box-shadow: 0 6px 10px rgba(0,0,0,0.6);
   }
 
-  /* The Chrome Bat Handle */
-  .toggle-bat {
-    position: relative;
+  /* Upright 3D Bat Handle Stalk */
+  .lever-pivot {
+    position: absolute;
+    left: 38px;
+    top: 38px;
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+    transform: translateZ(8px) rotateY(28deg);
+    transition: transform 0.09s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .switch-assembly.is-on .lever-pivot {
+    transform: translateZ(8px) rotateY(-28deg);
+  }
+
+  /* Crossed planes so the stalk has volume from every angle */
+  .stalk-beam {
+    position: absolute;
+    left: -5px;
+    top: 0;
+    width: 10px;
+    height: 36px;
+    background: linear-gradient(90deg, #94a3b8, #f8fafc, #475569);
+    border-radius: 5px;
+    transform-origin: center top;
+    transform: rotateX(90deg);
+  }
+
+  .stalk-beam.cross {
+    transform: rotateX(90deg) rotateY(90deg);
+  }
+
+  /* 3D Chrome Tip Cap at top of stalk */
+  .stalk-tip {
+    position: absolute;
+    left: -11px;
+    top: -11px;
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 45%, #475569 100%);
-    box-shadow: 0 6px 10px rgba(0,0,0,0.65);
-    transition: transform 0.09s cubic-bezier(0.34, 1.56, 0.64, 1);
-    /* OFF state leans right (away from the lid) */
-    transform: translateX(11px) scale(1);
+    background: radial-gradient(circle at 35% 35%, #ffffff 0%, #cbd5e1 45%, #475569 100%);
+    transform: translateZ(36px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    transition: background 0.1s ease;
   }
 
-  /* Reflective tip on bat handle */
-  .toggle-bat::after {
-    content: "";
-    position: absolute;
-    top: 3px;
-    left: 4px;
-    width: 8px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.9);
-  }
-
-  /* ON state leans left (toward the lid so the finger can push it right) */
-  .toggle-plate.is-on .toggle-bat {
-    transform: translateX(-11px) scale(1.06);
-    background: linear-gradient(135deg, #fff7ed 0%, #fdba74 40%, #ea580c 100%);
+  .switch-assembly.is-on .stalk-tip {
+    background: radial-gradient(circle at 35% 35%, #fff7ed 0%, #fdba74 45%, #ea580c 100%);
+    box-shadow: 0 0 12px rgba(255, 85, 0, 0.5);
   }
 
   .switch-labels {
+    position: absolute;
+    bottom: 24px;
+    left: 41px;
     width: 90px;
     display: flex;
     justify-content: space-between;
-    margin-top: 10px;
+    transform: translateZ(2px);
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     font-weight: 700;
@@ -371,13 +460,121 @@
     color: #f8fafc;
   }
 
-  /* Bottom Status Ticker */
+  /* ==========================================
+     THICK 3D HINGED LID DOOR (Left Half)
+     ========================================== */
+  .lid-3d {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 208px;
+    height: 220px;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+    pointer-events: none;
+  }
+
+  /* Outer Top Surface of Lid */
+  .lid-top {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #2a2f39 0%, #191c22 100%);
+    border: 2px solid #383f4d;
+    border-right: 2px solid #0f1115;
+    transform: translateZ(10px);
+    box-shadow: inset 0 2px 3px rgba(255,255,255,0.08);
+    backface-visibility: hidden;
+  }
+
+  /* Underside of Lid (visible when lid opens wide) */
+  .lid-under {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #4a2e19 0%, #2b1a0e 100%);
+    border: 3px solid #16181d;
+    transform: rotateY(180deg);
+    backface-visibility: hidden;
+  }
+
+  /* Extruded Right Lip of the Lid (shows physical board thickness) */
+  .lid-edge-right {
+    position: absolute;
+    left: 198px;
+    top: 0;
+    width: 10px;
+    height: 220px;
+    background: #5c3a21;
+    border-top: 1px solid #7c4d2b;
+    border-bottom: 1px solid #3a2312;
+    transform: translateZ(5px) rotateY(90deg);
+  }
+
+  /* Extruded Front Lip of the Lid */
+  .lid-edge-front {
+    position: absolute;
+    left: 0;
+    top: 210px;
+    width: 208px;
+    height: 10px;
+    background: #22262e;
+    border-bottom: 2px solid #111317;
+    transform: translateZ(5px) rotateX(-90deg);
+  }
+
+  /* ==========================================
+     CURVED 3D MECHANICAL ARM (Pivots inside cavity)
+     ========================================== */
+  .arm-pivot {
+    position: absolute;
+    left: 192px;
+    top: 110px;
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+    transform: translateZ(-12px);
+    pointer-events: none;
+  }
+
+  /* Vertical plane of the curved C-arm */
+  .arm-vertical-svg {
+    position: absolute;
+    left: -170px;
+    top: -115px;
+    width: 290px;
+    height: 160px;
+    transform-origin: 170px 115px;
+    transform: rotateX(-90deg);
+    overflow: visible;
+  }
+
+  /* Horizontal thickness crossbar so the arm looks solid from top-down */
+  .arm-spine-top {
+    position: absolute;
+    left: -140px;
+    top: -11px;
+    width: 230px;
+    height: 22px;
+    border-radius: 11px;
+    background: linear-gradient(90deg, #475569, #cbd5e1 65%, #ff5500 88%);
+    border: 2px solid #1e293b;
+    transform: translateZ(58px) rotateY(14deg);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+  }
+
   .footer-hint {
-    margin-top: 36px;
-    font-size: 13px;
+    margin-top: 24px;
+    font-size: 12px;
     color: #64748b;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
     font-family: 'JetBrains Mono', monospace;
+    z-index: 20;
+  }
+
+  @media (max-width: 650px) {
+    .viewport {
+      transform: scale(0.78);
+    }
   }
 </style>
 </head>
@@ -394,70 +591,89 @@
     </div>
   </div>
 
-  <div class="stage">
-    <div id="box-rig" class="box-rig">
-      <div class="box-chassis">
-        <!-- Corner Bolts -->
-        <div class="screw tl"></div>
-        <div class="screw tr"></div>
-        <div class="screw bl"></div>
-        <div class="screw br"></div>
+  <div id="viewport" class="viewport">
+    <div id="camera-rig" class="camera-rig">
+      <div id="box-3d" class="box-3d">
 
-        <!-- Dark Interior -->
-        <div class="cavity">
+        <!-- Soft ground shadow on the desk -->
+        <div class="desk-shadow"></div>
+
+        <!-- Extruded 3D Side Walls -->
+        <div class="wall wall-back"></div>
+        <div class="wall wall-left"></div>
+        <div class="wall wall-right"></div>
+        <div class="wall wall-front">
+          <div class="front-badge">MK-IV // USELESS</div>
+        </div>
+
+        <!-- Recessed Dark Interior Cavity -->
+        <div class="cavity-well">
           <div id="cavity-eyes" class="cavity-eyes">
             <div class="eye"></div>
             <div class="eye"></div>
           </div>
         </div>
+        <div class="cavity-rim-front"></div>
+        <div class="cavity-rim-back"></div>
+        <div class="cavity-rim-divider"></div>
 
-        <!-- Mechanical Arm SVG (sits above cavity, below lid door) -->
-        <svg class="arm-layer" viewBox="0 0 380 220">
-          <defs>
-            <linearGradient id="metalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#f1f5f9"/>
-              <stop offset="45%" stop-color="#94a3b8"/>
-              <stop offset="100%" stop-color="#334155"/>
-            </linearGradient>
-            <linearGradient id="rubberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ff6a00"/>
-              <stop offset="100%" stop-color="#b83300"/>
-            </linearGradient>
-          </defs>
-
-          <!-- Arm pivots from inside the left cavity -->
-          <g id="mech-arm" transform="translate(-140, 108)">
-            <!-- Main Curved Metallic Finger -->
-            <rect x="0" y="-14" width="245" height="28" rx="14" fill="url(#metalGrad)" stroke="#1e293b" stroke-width="2"/>
-            <!-- Industrial Cutout Slots -->
-            <rect x="45" y="-6" width="36" height="12" rx="6" fill="#0f172a"/>
-            <rect x="95" y="-6" width="36" height="12" rx="6" fill="#0f172a"/>
-            <rect x="145" y="-6" width="36" height="12" rx="6" fill="#0f172a"/>
-            <!-- Joint Rivets -->
-            <circle cx="25" cy="0" r="4" fill="#334155"/>
-            <circle cx="202" cy="0" r="4" fill="#334155"/>
-            <!-- High-Friction Orange Bumper Tip -->
-            <path d="M 225 -14 L 242 -14 A 14 14 0 0 1 256 0 A 14 14 0 0 1 242 14 L 225 14 Z" fill="url(#rubberGrad)"/>
-          </g>
-        </svg>
-
-        <!-- Hinged Lid Door -->
-        <div id="lid" class="lid">
-          <div class="screw tl"></div>
-          <div class="screw bl"></div>
+        <!-- 3D Mechanical Arm (rotates up out of the cavity in 3D space) -->
+        <div id="arm-pivot" class="arm-pivot">
+          <div id="arm-rotor" style="transform-style: preserve-3d;">
+            <svg class="arm-vertical-svg" viewBox="0 0 290 160">
+              <defs>
+                <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#475569"/>
+                  <stop offset="50%" stop-color="#e2e8f0"/>
+                  <stop offset="100%" stop-color="#94a3b8"/>
+                </linearGradient>
+                <linearGradient id="tipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ff6a00"/>
+                  <stop offset="100%" stop-color="#b83300"/>
+                </linearGradient>
+              </defs>
+              <!-- Curved C-hook mechanical finger profile -->
+              <path d="M 35 125 C 35 30, 185 20, 250 78" fill="none" stroke="#1e293b" stroke-width="34" stroke-linecap="round"/>
+              <path d="M 35 125 C 35 30, 185 20, 250 78" fill="none" stroke="url(#metalGrad)" stroke-width="28" stroke-linecap="round"/>
+              <!-- Cutout holes along the curved beam -->
+              <circle cx="85" cy="70" r="6" fill="#0f172a"/>
+              <circle cx="130" cy="54" r="6" fill="#0f172a"/>
+              <circle cx="178" cy="52" r="6" fill="#0f172a"/>
+              <!-- Orange rubberized bumper tip -->
+              <circle cx="254" cy="82" r="16" fill="url(#tipGrad)" stroke="#1e293b" stroke-width="2"/>
+            </svg>
+            <div class="arm-spine-top"></div>
+          </div>
         </div>
-        <div class="seam-shadow"></div>
 
-        <!-- Right Side Switch Panel -->
-        <div class="switch-zone">
+        <!-- Thick 3D Hinged Lid Door -->
+        <div id="lid-3d" class="lid-3d">
+          <div class="lid-top">
+            <div class="screw tl"></div>
+            <div class="screw bl"></div>
+          </div>
+          <div class="lid-under"></div>
+          <div class="lid-edge-right"></div>
+          <div class="lid-edge-front"></div>
+        </div>
+
+        <!-- Right Top Deck & Upright 3D Toggle Switch -->
+        <div class="right-deck">
+          <div class="screw tr"></div>
+          <div class="screw br"></div>
+
           <div class="led-housing">
             <div id="led-dot" class="led-dot"></div>
             <span id="led-text" class="led-text">OFF</span>
           </div>
 
-          <div id="toggle-plate" class="toggle-plate" role="button" aria-label="Toggle Switch">
-            <div class="toggle-nut">
-              <div class="toggle-bat"></div>
+          <div id="switch-assembly" class="switch-assembly" role="button" aria-label="3D Toggle Switch">
+            <div class="washer-plate"></div>
+            <div class="hex-nut"></div>
+            <div class="lever-pivot">
+              <div class="stalk-beam"></div>
+              <div class="stalk-beam cross"></div>
+              <div class="stalk-tip"></div>
             </div>
           </div>
 
@@ -466,21 +682,23 @@
             <span id="lbl-off" class="lit">OFF</span>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 
-  <div class="footer-hint">CLICK THE SWITCH TO TURN IT ON</div>
+  <div class="footer-hint">MOVE MOUSE TO ORBIT CAMERA // CLICK SWITCH TO FLIP</div>
 
 <script>
-  const togglePlate = document.getElementById('toggle-plate');
+  const cameraRig = document.getElementById('camera-rig');
+  const box3d = document.getElementById('box-3d');
+  const switchAssembly = document.getElementById('switch-assembly');
   const ledDot = document.getElementById('led-dot');
   const ledText = document.getElementById('led-text');
   const lblOn = document.getElementById('lbl-on');
   const lblOff = document.getElementById('lbl-off');
-  const lidEl = document.getElementById('lid');
-  const armEl = document.getElementById('mech-arm');
-  const boxRig = document.getElementById('box-rig');
+  const lid3d = document.getElementById('lid-3d');
+  const armRotor = document.getElementById('arm-rotor');
   const eyesEl = document.getElementById('cavity-eyes');
   const flipCountEl = document.getElementById('flip-count');
   const moodNameEl = document.getElementById('mood-name');
@@ -490,7 +708,16 @@
   let flipCount = 0;
   let lastPersonalityIndex = -1;
 
-  // Current animated coordinates (0 to 1)
+  // Interactive 3D Parallax Camera Orbit
+  window.addEventListener('pointermove', (e) => {
+    const nx = (e.clientX / window.innerWidth - 0.5) * 2;
+    const ny = (e.clientY / window.innerHeight - 0.5) * 2;
+    const rotX = 52 - ny * 10;
+    const rotZ = -18 + nx * 14;
+    cameraRig.style.transform = `rotateX(${rotX.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg)`;
+  });
+
+  // Current animated positions (0 to 1)
   let currentLid = 0;
   let currentArm = 0;
 
@@ -507,7 +734,6 @@
     return audioCtx;
   }
 
-  // Crisp metallic toggle snap
   function soundSwitchClick(turningOn) {
     const ctx = getAudio();
     const now = ctx.currentTime;
@@ -515,10 +741,10 @@
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(turningOn ? 1900 : 1400, now);
-    osc.frequency.exponentialRampToValueAtTime(220, now + 0.028);
+    osc.frequency.setValueAtTime(turningOn ? 1950 : 1420, now);
+    osc.frequency.exponentialRampToValueAtTime(210, now + 0.028);
 
-    gain.gain.setValueAtTime(0.7, now);
+    gain.gain.setValueAtTime(0.75, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.028);
 
     osc.connect(gain);
@@ -527,7 +753,6 @@
     osc.stop(now + 0.03);
   }
 
-  // Servo motor whine proportional to movement duration & distance
   function soundServo(durationMs, pitchBase = 240) {
     if (durationMs < 35) return;
     const ctx = getAudio();
@@ -544,7 +769,7 @@
     osc.frequency.linearRampToValueAtTime(pitchBase * 0.92, now + dur);
 
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.setValueAtTime(820, now);
     filter.Q.setValueAtTime(3.0, now);
 
     gain.gain.setValueAtTime(0.01, now);
@@ -559,7 +784,6 @@
     osc.stop(now + dur);
   }
 
-  // Heavy wooden lid slam
   function soundLidSlam(intensity = 1) {
     const ctx = getAudio();
     const now = ctx.currentTime;
@@ -567,19 +791,18 @@
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(135 * intensity, now);
-    osc.frequency.exponentialRampToValueAtTime(32, now + 0.09);
+    osc.frequency.setValueAtTime(130 * intensity, now);
+    osc.frequency.exponentialRampToValueAtTime(30, now + 0.095);
 
     gain.gain.setValueAtTime(Math.min(1, 0.85 * intensity), now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.1);
+    osc.stop(now + 0.105);
   }
 
-  // Angry low motor growl for vibration/tantrums
   function soundGrowl(durationMs) {
     const ctx = getAudio();
     const now = ctx.currentTime;
@@ -590,7 +813,7 @@
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(65, now);
 
-    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.setValueAtTime(0.22, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
 
     osc.connect(gain);
@@ -599,31 +822,36 @@
     osc.stop(now + dur);
   }
 
-  // Visual render helpers
+  // 3D Transform Renderers
   function renderLid(val) {
     currentLid = val;
-    // Opens up to -76 degrees around left hinge
-    const angle = -val * 76;
-    lidEl.style.transform = `perspective(700px) rotateY(${angle}deg)`;
+    // Opens upward into 3D space along the left hinge
+    const angle = -val * 78;
+    lid3d.style.transform = `rotateY(${angle}deg)`;
   }
 
   function renderArm(val) {
     currentArm = val;
-    // Sweeps from X = -140 (hidden inside cavity) to X = 42 (touching toggle bat)
-    const xPos = -140 + (val * 182);
-    armEl.setAttribute('transform', `translate(${xPos}, 108)`);
+    // Rotates from hidden inside the cavity (-75 deg) to arching over the deck (+16 deg)
+    const rotY = -75 + (val * 91);
+    const transZ = -28 + (val * 38);
+    armRotor.style.transform = `translateZ(${transZ}px) rotateY(${rotY}deg)`;
   }
 
-  function setSwitchVisual(on,ZoneFlip = false) {
+  // Initialize starting positions
+  renderLid(0);
+  renderArm(0);
+
+  function setSwitchVisual(on) {
     isSwitchOn = on;
     if (on) {
-      togglePlate.classList.add('is-on');
+      switchAssembly.classList.add('is-on');
       ledDot.classList.add('active');
       ledText.textContent = 'ON';
       lblOn.classList.add('lit');
       lblOff.classList.remove('lit');
     } else {
-      togglePlate.classList.remove('is-on');
+      switchAssembly.classList.remove('is-on');
       ledDot.classList.remove('active');
       ledText.textContent = 'OFF';
       lblOn.classList.remove('lit');
@@ -632,7 +860,6 @@
     soundSwitchClick(on);
   }
 
-  // Promise-based animation primitives
   const wait = (ms) => new Promise(res => setTimeout(res, ms));
 
   function tween(from, to, duration, onUpdate) {
@@ -645,7 +872,6 @@
       const start = performance.now();
       function frame(now) {
         const t = Math.min(1, (now - start) / duration);
-        // Smooth ease-in-out
         const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
         onUpdate(from + (to - from) * eased);
         if (t < 1) {
@@ -714,11 +940,11 @@
       name: "03 / PASSIVE AGGRESSIVE",
       run: async () => {
         await wait(300);
-        await moveLid(0.35, 900);
+        await moveLid(0.38, 900);
         eyesEl.classList.add('glow');
         await wait(1100);
         await moveLid(0.85, 650);
-        await moveArm(0.92, 1300); // Creeps right up to the switch
+        await moveArm(0.92, 1300);
         await wait(700);
         await moveArm(1.0, 90);
         hitOff();
@@ -730,7 +956,7 @@
     {
       name: "04 / THE 4-SECOND FAKEOUT",
       run: async () => {
-        await wait(3800); // Complete dead silence first
+        await wait(3800);
         await moveLid(1.0, 80);
         await moveArm(1.02, 85);
         hitOff();
@@ -742,12 +968,12 @@
       name: "05 / PARANOID PEEKER",
       run: async () => {
         await wait(200);
-        await moveLid(0.28, 220);
+        await moveLid(0.32, 220);
         eyesEl.classList.add('glow');
         await wait(650);
         await moveLid(0, 140, true);
         await wait(500);
-        await moveLid(0.35, 200);
+        await moveLid(0.38, 200);
         await wait(550);
         await moveLid(0.9, 140);
         await moveArm(1.0, 140);
@@ -760,23 +986,21 @@
     {
       name: "06 / TEMPER TANTRUM",
       run: async () => {
-        boxRig.classList.add('shake-violent');
+        box3d.classList.add('shake-violent');
         soundGrowl(650);
         await wait(650);
-        boxRig.classList.remove('shake-violent');
+        box3d.classList.remove('shake-violent');
         await moveLid(1.0, 70);
-        // Slams the switch 3 times
         await moveArm(1.03, 75);
         hitOff();
-        boxRig.classList.add('hop');
+        box3d.classList.add('hop');
         soundLidSlam(1.4);
         await wait(70);
-        boxRig.classList.remove('hop');
+        box3d.classList.remove('hop');
         await moveArm(0.75, 80);
         await moveArm(1.03, 70);
         soundLidSlam(1.2);
         await moveArm(0, 100);
-        // Slams lid twice
         await moveLid(0, 70, true);
         await wait(120);
         await moveLid(0.45, 90);
@@ -788,11 +1012,11 @@
       run: async () => {
         await wait(150);
         await moveLid(0.85, 180);
-        await moveArm(0.88, 200); // Stops 4mm short of the switch!
+        await moveArm(0.88, 200);
         await wait(850);
         await moveArm(0, 180);
         await moveLid(0, 180, true);
-        await wait(950); // Lets you think it broke
+        await wait(950);
         await moveLid(0.95, 85);
         await moveArm(1.02, 85);
         hitOff();
@@ -806,12 +1030,10 @@
         await moveLid(0.85, 170);
         await moveArm(1.0, 170);
         hitOff();
-        // Holds its finger firmly on the switch so you cannot touch it
         eyesEl.classList.add('glow');
         await wait(1600);
         await moveArm(0.5, 220);
         await wait(450);
-        // Lunges back at the switch as a warning
         await moveArm(0.95, 80);
         await wait(450);
         eyesEl.classList.remove('glow');
@@ -824,12 +1046,12 @@
       run: async () => {
         await moveLid(0.5, 450);
         await wait(250);
-        await moveLid(0.25, 300); // Droops down
+        await moveLid(0.25, 300);
         await moveLid(0.85, 650);
         await moveArm(0.55, 500);
         await wait(350);
-        await moveArm(0.45, 250); // Sags back
-        await moveArm(1.0, 850);  // Barely pushes it off
+        await moveArm(0.45, 250);
+        await moveArm(1.0, 850);
         hitOff();
         await wait(300);
         await moveArm(0, 750);
@@ -845,7 +1067,6 @@
         await moveArm(0, 150);
         await moveLid(0, 150, true);
         await wait(550);
-        // Comes back out just to tap the already-OFF switch
         await moveLid(0.75, 150);
         await moveArm(0.98, 160);
         soundSwitchClick(false);
@@ -858,9 +1079,9 @@
       }
     },
     {
-      name: "11 / CAFFEINE Jitters",
+      name: "11 / CAFFEINE JITTERS",
       run: async () => {
-        boxRig.classList.add('shake-mild');
+        box3d.classList.add('shake-mild');
         for (let i = 0; i < 4; i++) {
           await moveLid(0.35, 55);
           await moveLid(0.1, 55);
@@ -868,7 +1089,7 @@
         await moveLid(0.95, 70);
         await moveArm(1.02, 75);
         hitOff();
-        boxRig.classList.remove('shake-mild');
+        box3d.classList.remove('shake-mild');
         await moveArm(0, 75);
         await moveLid(0, 70, true);
       }
@@ -876,7 +1097,6 @@
     {
       name: "12 / HEAVY SIGH",
       run: async () => {
-        // Lid rises and drops like a deep chest sigh
         await moveLid(0.45, 650);
         await wait(250);
         await moveLid(0.08, 600);
@@ -891,7 +1111,6 @@
     {
       name: "13 / SHOWBOAT",
       run: async () => {
-        // Rhythmically claps the lid before flipping
         await moveLid(0.55, 110);
         await moveLid(0, 90, true);
         await wait(90);
@@ -909,7 +1128,6 @@
       name: "14 / NINJA SNATCH",
       run: async () => {
         await wait(600);
-        // Barely cracks the lid open and squeezes the finger through the gap
         await moveLid(0.48, 80);
         await moveArm(1.0, 70);
         hitOff();
@@ -923,9 +1141,8 @@
         await moveLid(0.85, 260);
         await moveArm(0.65, 280);
         eyesEl.classList.add('glow');
-        // Stares at the switch questioning its life purpose
         await wait(1500);
-        await moveLid(0.55, 400); // Lid droops onto its own arm
+        await moveLid(0.55, 400);
         await wait(900);
         await moveLid(0.85, 200);
         await moveArm(1.0, 300);
@@ -938,7 +1155,6 @@
   ];
 
   function pickPersonality() {
-    // First 2 flips use classic quick responses to establish the joke
     if (flipCount === 0) return personalities[0];
     if (flipCount === 1) return personalities[1];
 
@@ -951,7 +1167,7 @@
     return personalities[idx];
   }
 
-  togglePlate.addEventListener('pointerdown', async (e) => {
+  switchAssembly.addEventListener('pointerdown', async (e) => {
     e.preventDefault();
     if (isSwitchOn || isBusy) return;
 
