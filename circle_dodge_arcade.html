@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIRCLE DODGE // Arcade Survival</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=JetBrains+Mono:wght@600;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0e17;
+    --card: #141824;
+    --ink: #ffffff;
+    --yellow: #ffe600;
+    --red: #ff0d29;
+    --muted: #9aa6bf;
+    --line: #354058;
+  }
+
+  * {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  .hud {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .stat-box {
+    background: var(--card);
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .stat-box.accent {
+    background: var(--yellow);
+  }
+
+  .stat-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 800;
+  }
+
+  .capacity-wrap {
+    width: 320px;
+    height: 14px;
+    background: var(--card);
+    border: 3px solid var(--ink);
+    border-radius: 99px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  .capacity-bar {
+    height: 100%;
+    width: 4%;
+    background: var(--red);
+    transition: width 0.2s ease;
+  }
+
+  .arena-stage {
+    position: relative;
+    width: min(440px, 88vw);
+    height: min(440px, 88vw);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--card);
+    border: 5px solid var(--ink);
+    box-shadow: 8px 8px 0 var(--ink);
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(17, 17, 17, 0.88);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .overlay h2 {
+    margin: 0 0 8px;
+    font-size: 26px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--yellow);
+  }
+
+  .overlay p {
+    margin: 0 0 22px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #e2e8f0;
+    max-width: 260px;
+  }
+
+  .btn-play {
+    background: var(--yellow);
+    color: var(--ink);
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 #ffffff;
+    padding: 12px 26px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  .btn-play:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 #ffffff;
+  }
+
+  .controls-hint {
+    margin-top: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    text-align: center;
+  }
+
+
+  /* SQUARE ARCADE VISUAL SYSTEM — presentation only */
+  *, *::before, *::after { border-radius: 0 !important; }
+  html { min-height:100%; background:#0b0e17; }
+  body {
+    min-height:100vh; min-height:100dvh; position:relative; isolation:isolate;
+    padding:clamp(14px,3vw,30px); gap:0;
+    background-color:#0b0e17;
+    background-image:linear-gradient(rgba(255,255,255,.035) 2px,transparent 2px),linear-gradient(90deg,rgba(255,255,255,.035) 2px,transparent 2px);
+    background-size:36px 36px; color:#fff; font-family:'Plus Jakarta Sans',sans-serif;
+  }
+  body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:-1; background:radial-gradient(ellipse at 50% 48%,rgba(0,157,255,.10),transparent 55%); }
+  .game-heading { width:min(620px,94vw); display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 auto 20px; }
+  .brand-lockup { display:flex; align-items:center; gap:12px; }
+  .brand-mark { width:42px;height:42px;display:grid;place-items:center;background:#ffe600;color:#0b0d13;border:3px solid #000;box-shadow:4px 4px 0 #000;font:800 13px 'JetBrains Mono',monospace; }
+  .brand-title { margin:0;font:700 clamp(21px,4vw,29px)/1 'Fredoka',sans-serif;letter-spacing:.04em;text-transform:uppercase; }
+  .brand-sub { margin:5px 0 0;color:#ffe600;font:800 9px 'JetBrains Mono',monospace;letter-spacing:1.5px;text-transform:uppercase; }
+  .live-tag { border:2px solid #fff;background:#090b10;padding:7px 10px;box-shadow:3px 3px 0 #000;color:#ffe600;font:800 10px 'JetBrains Mono',monospace;letter-spacing:1px;white-space:nowrap; }
+  .hud { width:min(620px,94vw); display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 auto 14px; }
+  .stat-box { min-width:0;background:#141824;border:2px solid #000;box-shadow:4px 4px 0 #000;padding:10px 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#fff; }
+  .stat-box.accent { background:#ffe600;color:#0b0d13; }
+  .stat-label { font:800 9px 'JetBrains Mono',monospace;letter-spacing:1px;color:inherit;opacity:.82; }
+  .stat-val { font:800 clamp(15px,2.5vw,20px) 'JetBrains Mono',monospace; }
+  .capacity-shell { width:min(620px,94vw);margin:0 auto 20px; }
+  .capacity-meta { display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;color:#aab3c8;font:800 9px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase; }
+  .capacity-wrap { width:100%;height:13px;background:#141824;border:2px solid #000;margin:0;overflow:hidden;box-shadow:3px 3px 0 #000; }
+  .capacity-bar { background:linear-gradient(90deg,#ffe600 0%,#ff7a00 55%,#ff0d29 100%);transition:width .2s ease; }
+  .arena-stage { width:min(500px,86vw,calc(100dvh - 290px));height:min(500px,86vw,calc(100dvh - 290px));min-width:260px;min-height:260px; }
+  canvas { background:#141824;border:4px solid #000;box-shadow:10px 10px 0 #000,0 0 0 2px #354058; }
+  .overlay { background:rgba(9,11,16,.94);border:4px solid #fff;box-shadow:8px 8px 0 #000;padding:clamp(18px,5vw,32px); }
+  .overlay h2 { font:700 clamp(21px,5vw,29px)/1.1 'Fredoka',sans-serif;color:#ffe600;letter-spacing:.04em; }
+  .overlay p { color:#cbd5e1;font-size:13px; }
+  .btn-play { background:#ffe600;color:#0b0d13;border:3px solid #000;box-shadow:4px 4px 0 #fff;font:700 15px 'Fredoka',sans-serif;letter-spacing:.04em;padding:12px 24px; }
+  .btn-play:hover { background:#fff04d;transform:translate(-1px,-1px); }
+  .btn-play:active { transform:translate(2px,2px);box-shadow:1px 1px 0 #fff; }
+  .controls-hint { width:min(620px,94vw);margin:22px auto 0;padding:10px 12px;background:#090b10;border:2px solid #2e3752;box-shadow:3px 3px 0 #000;color:#cbd5e1;font:800 9px/1.6 'JetBrains Mono',monospace;letter-spacing:.8px; }
+  @media(max-width:480px) {
+    body { padding:14px 12px; }
+    .game-heading { margin-bottom:16px; }
+    .brand-mark { width:36px;height:36px; }
+    .live-tag { font-size:8px;padding:6px; }
+    .hud { gap:7px;margin-bottom:12px; }
+    .stat-box { padding:9px 7px;flex-direction:column;align-items:flex-start;gap:4px; }
+    .stat-label { font-size:8px; }
+    .capacity-shell { margin-bottom:16px; }
+    .arena-stage { width:min(86vw,calc(100dvh - 275px));height:min(86vw,calc(100dvh - 275px)); }
+    .controls-hint { margin-top:18px;font-size:8px; }
+  }
+  @media(max-height:650px) and (orientation:landscape) {
+    body { padding:8px 18px;display:grid;grid-template-columns:minmax(210px,300px) minmax(260px,1fr);grid-template-rows:auto auto 1fr auto;column-gap:24px;align-content:center; }
+    .game-heading { grid-column:1;grid-row:1;width:100%;margin:0 0 10px; }
+    .hud { grid-column:1;grid-row:2;width:100%;margin:0 0 10px; }
+    .capacity-shell { grid-column:1;grid-row:3;width:100%;align-self:start;margin:8px 0; }
+    .arena-stage { grid-column:2;grid-row:1 / span 4;width:min(88dvh,calc(100vw - 370px));height:min(88dvh,calc(100vw - 370px));justify-self:center; }
+    .controls-hint { grid-column:1;grid-row:4;width:100%;margin:8px 0 0; }
+  }
+
+</style>
+</head>
+<body>
+
+  <header class="game-heading">
+    <div class="brand-lockup"><div class="brand-mark">CD</div><div><h1 class="brand-title">Circle Dodge</h1><p class="brand-sub">Arcade survival mode</p></div></div>
+    <div class="live-tag">● LIVE ARENA</div>
+  </header>
+
+  <div class="hud">
+    <div class="stat-box accent">
+      <span class="stat-label">Time</span>
+      <span id="time-val" class="stat-val">0.0s</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Balls</span>
+      <span id="balls-val" class="stat-val">1 / 25</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Speed</span>
+      <span id="speed-val" class="stat-val">1.0x</span>
+    </div>
+  </div>
+
+  <div class="capacity-shell">
+    <div class="capacity-meta"><span>Arena capacity</span><span>25 BALL LIMIT</span></div>
+    <div class="capacity-wrap" title="Circle Capacity">
+      <div id="capacity-bar" class="capacity-bar"></div>
+    </div>
+  </div>
+
+  <div class="arena-stage">
+    <canvas id="canvas" width="500" height="500"></canvas>
+
+    <div id="overlay" class="overlay">
+      <h2 id="overlay-title">Circle Packed!</h2>
+      <p id="overlay-desc">You survived for 0.0 seconds before the arena filled up.</p>
+      <button id="btn-restart" class="btn-play">Play Again</button>
+    </div>
+  </div>
+
+  <div class="controls-hint">CONTROLS  /  WASD OR ARROW KEYS TO STEER  •  DRAG INSIDE THE ARENA</div>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const timeVal = document.getElementById('time-val');
+  const ballsVal = document.getElementById('balls-val');
+  const speedVal = document.getElementById('speed-val');
+  const capacityBar = document.getElementById('capacity-bar');
+  const overlay = document.getElementById('overlay');
+  const overlayDesc = document.getElementById('overlay-desc');
+  const btnRestart = document.getElementById('btn-restart');
+
+  const W = canvas.width;
+  const H = canvas.height;
+  const CX = W / 2;
+  const CY = H / 2;
+  const ARENA_RADIUS = 242;
+  const MAX_ENEMIES = 25;
+
+  const BASE_ENEMY_SPEED = 2.9;
+  const SPEED_STEP = 0.35; // Added speed per new ball
+
+  let player = null;
+  let enemies = [];
+  let keys = {};
+  let pointerTarget = null;
+  let startTime = 0;
+  let elapsedSeconds = 0;
+  let hitCooldown = 0;
+  let screenShake = 0;
+  let gameOver = false;
+
+  // Web Audio Synthesizer
+  let audioCtx = null;
+  function getAudio() {
+    if (!audioCtx) {
+      const AudioClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioClass();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playWallBounce() {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(190, now);
+    osc.frequency.exponentialRampToValueAtTime(75, now + 0.035);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.04);
+  }
+
+  function playMultiplyHit() {
+    const a = getAudio();
+    const now = a.currentTime;
+    const osc = a.createOscillator();
+    const gain = a.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(110, now + 0.14);
+    gain.gain.setValueAtTime(0.28, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.connect(gain);
+    gain.connect(a.destination);
+    osc.start(now);
+    osc.stop(now + 0.16);
+  }
+
+  function currentTargetSpeed() {
+    return BASE_ENEMY_SPEED + (enemies.length - 1) * SPEED_STEP;
+  }
+
+  function normalizeEnemySpeed(ball) {
+    const target = currentTargetSpeed();
+    const mag = Math.hypot(ball.vx, ball.vy) || 1;
+    ball.vx = (ball.vx / mag) * target;
+    ball.vy = (ball.vy / mag) * target;
+  }
+
+  function spawnEnemyBall(safeFromPlayer = true) {
+    let x = CX + 90;
+    let y = CY;
+
+    if (safeFromPlayer && player) {
+      // Spawn on the opposite side of the circle from the player
+      const angleToPlayer = Math.atan2(player.y - CY, player.x - CX);
+      const spawnAngle = angleToPlayer + Math.PI + (Math.random() - 0.5) * 0.8;
+      const dist = 135;
+      x = CX + Math.cos(spawnAngle) * dist;
+      y = CY + Math.sin(spawnAngle) * dist;
+    }
+
+    const dir = Math.random() * Math.PI * 2;
+    const ball = {
+      x,
+      y,
+      r: 15,
+      vx: Math.cos(dir),
+      vy: Math.sin(dir),
+      grace: 35 // Frames of spawn flash
+    };
+
+    enemies.push(ball);
+    // Boost speed of all existing enemy balls
+    enemies.forEach(normalizeEnemySpeed);
+    updateHUD();
+  }
+
+  function initGame() {
+    player = {
+      x: CX - 80,
+      y: CY,
+      r: 16,
+      vx: 2.2,
+      vy: -2.4
+    };
+    enemies = [];
+    hitCooldown = 0;
+    screenShake = 0;
+    gameOver = false;
+    startTime = performance.now();
+    elapsedSeconds = 0;
+    overlay.classList.remove('visible');
+
+    spawnEnemyBall(true);
+  }
+
+  function updateHUD() {
+    ballsVal.textContent = `${enemies.length} / ${MAX_ENEMIES}`;
+    const mult = (currentTargetSpeed() / BASE_ENEMY_SPEED).toFixed(1);
+    speedVal.textContent = `${mult}x`;
+    capacityBar.style.width = `${(enemies.length / MAX_ENEMIES) * 100}%`;
+  }
+
+  // Reflect a ball inside the circular arena boundary
+  function bounceInsideCircle(ball, isPlayer = false) {
+    const dx = ball.x - CX;
+    const dy = ball.y - CY;
+    const dist = Math.hypot(dx, dy);
+    const maxDist = ARENA_RADIUS - ball.r;
+
+    if (dist > maxDist) {
+      const nx = dx / dist;
+      const ny = dy / dist;
+
+      // Push ball back inside the rim
+      ball.x = CX + nx * maxDist;
+      ball.y = CY + ny * maxDist;
+
+      // Reflect velocity vector across the inward normal
+      const dot = ball.vx * nx + ball.vy * ny;
+      if (dot > 0) {
+        ball.vx -= 2 * dot * nx;
+        ball.vy -= 2 * dot * ny;
+
+        // Add a tiny 3-degree random scatter to enemy wall bounces so paths stay unpredictable
+        if (!isPlayer) {
+          const angle = Math.atan2(ball.vy, ball.vx) + (Math.random() - 0.5) * 0.12;
+          const spd = currentTargetSpeed();
+          ball.vx = Math.cos(angle) * spd;
+          ball.vy = Math.sin(angle) * spd;
+        } else {
+          playWallBounce();
+        }
+      }
+    }
+  }
+
+  // Elastic collision between two balls
+  function collideBalls(b1, b2) {
+    const dx = b2.x - b1.x;
+    const dy = b2.y - b1.y;
+    const dist = Math.hypot(dx, dy);
+    const minDist = b1.r + b2.r;
+
+    if (dist > 0 && dist < minDist) {
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const overlap = minDist - dist;
+
+      b1.x -= nx * overlap * 0.5;
+      b1.y -= ny * overlap * 0.5;
+      b2.x += nx * overlap * 0.5;
+      b2.y += ny * overlap * 0.5;
+
+      const kx = b1.vx - b2.vx;
+      const ky = b1.vy - b2.vy;
+      const p = nx * kx + ny * ky;
+
+      if (p > 0) {
+        b1.vx -= p * nx;
+        b1.vy -= p * ny;
+        b2.vx += p * nx;
+        b2.vy += p * ny;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  function update() {
+    if (gameOver) return;
+
+    elapsedSeconds = (performance.now() - startTime) / 1000;
+    timeVal.textContent = `${elapsedSeconds.toFixed(1)}s`;
+
+    if (hitCooldown > 0) hitCooldown--;
+    if (screenShake > 0) screenShake *= 0.85;
+
+    // Player steering (adds thrust while keeping continuous bounce momentum)
+    const accel = 0.42;
+    if (keys['ArrowUp'] || keys['KeyW']) player.vy -= accel;
+    if (keys['ArrowDown'] || keys['KeyS']) player.vy += accel;
+    if (keys['ArrowLeft'] || keys['KeyA']) player.vx -= accel;
+    if (keys['ArrowRight'] || keys['KeyD']) player.vx += accel;
+
+    if (pointerTarget) {
+      const pdx = pointerTarget.x - player.x;
+      const pdy = pointerTarget.y - player.y;
+      const pdist = Math.hypot(pdx, pdy);
+      if (pdist > 6) {
+        player.vx += (pdx / pdist) * accel * 1.15;
+        player.vy += (pdy / pdist) * accel * 1.15;
+      }
+    }
+
+    // Clamp player speed so it always stays in motion between 2.2 and 5.6
+    const pSpeed = Math.hypot(player.vx, player.vy) || 1;
+    const maxPSpeed = 5.6;
+    const minPSpeed = 2.0;
+    if (pSpeed > maxPSpeed) {
+      player.vx = (player.vx / pSpeed) * maxPSpeed;
+      player.vy = (player.vy / pSpeed) * maxPSpeed;
+    } else if (pSpeed < minPSpeed) {
+      player.vx = (player.vx / pSpeed) * minPSpeed;
+      player.vy = (player.vy / pSpeed) * minPSpeed;
+    }
+
+    player.x += player.vx;
+    player.y += player.vy;
+    bounceInsideCircle(player, true);
+
+    // Move enemy balls
+    for (let i = 0; i < enemies.length; i++) {
+      const e = enemies[i];
+      if (e.grace > 0) e.grace--;
+      e.x += e.vx;
+      e.y += e.vy;
+      bounceInsideCircle(e, false);
+    }
+
+    // Enemy-to-enemy collisions
+    for (let i = 0; i < enemies.length; i++) {
+      for (let j = i + 1; j < enemies.length; j++) {
+        if (collideBalls(enemies[i], enemies[j])) {
+          normalizeEnemySpeed(enemies[i]);
+          normalizeEnemySpeed(enemies[j]);
+        }
+      }
+    }
+
+    // Player-to-enemy collisions
+    for (let i = 0; i < enemies.length; i++) {
+      const e = enemies[i];
+      if (collideBalls(player, e)) {
+        normalizeEnemySpeed(e);
+
+        if (hitCooldown === 0 && e.grace === 0) {
+          hitCooldown = 28; // 0.45s immunity so one bump only spawns 1 ball
+          screenShake = 8;
+          playMultiplyHit();
+          spawnEnemyBall(true);
+
+          if (enemies.length >= MAX_ENEMIES) {
+            gameOver = true;
+            overlayDesc.textContent = `You survived for ${elapsedSeconds.toFixed(1)} seconds before all ${MAX_ENEMIES} balls packed the circle.`;
+            overlay.classList.add('visible');
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+
+    if (screenShake > 0.4) {
+      ctx.translate(
+        (Math.random() - 0.5) * screenShake,
+        (Math.random() - 0.5) * screenShake
+      );
+    }
+
+    // Subtle center target rings inside the circle
+    ctx.strokeStyle = '#354058';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(CX, CY, ARENA_RADIUS * 0.6, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(CX, CY, ARENA_RADIUS * 0.25, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Draw Enemy Balls (Red)
+    enemies.forEach((e) => {
+      ctx.save();
+      if (e.grace > 0 && Math.floor(e.grace / 4) % 2 === 0) {
+        ctx.globalAlpha = 0.45;
+      }
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff0d29';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#090b10';
+      ctx.stroke();
+
+      // Gloss dot
+      ctx.beginPath();
+      ctx.arc(e.x - e.r * 0.3, e.y - e.r * 0.3, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Draw Player Ball (Bright Yellow with black border)
+    ctx.save();
+    if (hitCooldown > 0 && Math.floor(hitCooldown / 3) % 2 === 0) {
+      ctx.globalAlpha = 0.5;
+    }
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffe600';
+    ctx.fill();
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = '#090b10';
+    ctx.stroke();
+
+    // Inner core dot so player ball is unmistakable in a crowd
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#0b0d13';
+    ctx.fill();
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // Keyboard Controls
+  window.addEventListener('keydown', (e) => {
+    keys[e.code] = true;
+    getAudio();
+  });
+
+  window.addEventListener('keyup', (e) => {
+    keys[e.code] = false;
+  });
+
+  // Mouse / Touch steering inside the circle
+  function updatePointer(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    pointerTarget = {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    getAudio();
+    updatePointer(e);
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (e.buttons > 0 || e.pointerType === 'touch') {
+      updatePointer(e);
+    }
+  });
+
+  window.addEventListener('pointerup', () => {
+    pointerTarget = null;
+  });
+
+  btnRestart.addEventListener('click', initGame);
+
+  // Start
+  initGame();
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>
